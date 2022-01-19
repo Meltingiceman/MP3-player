@@ -106,7 +106,6 @@ public class PlayListView extends AppCompatActivity {
                         mediaPlayer.release();
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                        System.out.println("LOSS TRANSIENT");
                         pause();
                         break;
                 }
@@ -187,8 +186,6 @@ public class PlayListView extends AppCompatActivity {
             }
         });
 
-
-
         progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -210,7 +207,6 @@ public class PlayListView extends AppCompatActivity {
 
                 if(state == State.PLAYING)
                     play();
-
 
             }
         });
@@ -240,11 +236,6 @@ public class PlayListView extends AppCompatActivity {
 
                 if(playingIx == i && mediaPlayer.isPlaying())
                     return;
-
-                //Toast.makeText(getApplicationContext(), "This will play item " + i + ".", Toast.LENGTH_LONG).show();
-
-                //DEBUG
-                System.out.println(playList.get(i).path);
 
                 playSong(i);
 
@@ -312,8 +303,6 @@ public class PlayListView extends AppCompatActivity {
             Song temp = playList.get(playingIx);
             ArrayList<Song> tempList = new ArrayList<Song>();
             tempList.add(temp);
-
-            System.out.println("Song playing is \"" + temp.name + "\"\nindex is " + playingIx);
 
             Collections.shuffle(playList);
 
@@ -385,7 +374,6 @@ public class PlayListView extends AppCompatActivity {
 
     private void pause()
     {
-        System.out.println("PAUSING!");
         mediaPlayer.pause();
         ImageButton playPause_btn = findViewById(R.id.playPause_btn);
 
@@ -420,7 +408,6 @@ public class PlayListView extends AppCompatActivity {
 
         if (request != null) {
             manager.abandonAudioFocusRequest(request);
-            System.out.println("Abandoning focus!");
         }
 
         finish();
@@ -428,7 +415,6 @@ public class PlayListView extends AppCompatActivity {
 
     private int requestFocus()
     {
-        System.out.println("Requesting access!");
         manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
         AudioAttributes playbackAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -442,12 +428,8 @@ public class PlayListView extends AppCompatActivity {
                 .setOnAudioFocusChangeListener(focusChangeListener)
                 .build();
 
-
-
         return manager.requestAudioFocus(request);
     }
-
-
 
     private void swapPlayPause()
     {
@@ -507,14 +489,11 @@ public class PlayListView extends AppCompatActivity {
                 int state = intent.getIntExtra("state", -1);
                 switch (state) {
                     case 0:
-                        Log.d(TAG, "Headset is unplugged");
                         pause();
                         break;
-                    case 1:
-                        Log.d(TAG, "Headset is plugged");
-                        break;
-//                    default:
-//                        Log.d(TAG, "I have no idea what the headset state is");
+//                    case 1:
+//
+//                        break;
                 }
             }
         }
@@ -558,7 +537,6 @@ class SongAdapter extends ArrayAdapter<Song>
 
         if(row == null)
         {
-            System.out.println("in if");
             LayoutInflater inflater = ((Activity)context).getLayoutInflater();
             row = inflater.inflate(layoutResourceId, parent, false);
 
@@ -573,7 +551,6 @@ class SongAdapter extends ArrayAdapter<Song>
         }
         else
         {
-            System.out.println("in else");
             holder = (SongHolder) row.getTag();
         }
 
