@@ -42,6 +42,9 @@ public class PlayListView extends AppCompatActivity {
         IDLE, PAUSED, PLAYING
     }
 
+    private AudioManager manager;
+    private AudioFocusRequest request;
+
     private int playList_ix;
     private ActivityResultLauncher<Intent> edit_launcher;
     private MusicIntentReceiver receiver;
@@ -77,6 +80,7 @@ public class PlayListView extends AppCompatActivity {
         progressBar = findViewById(R.id.seekBar);
         progressBar.setMax(0);
 
+        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         time = findViewById(R.id.time);
         TextView playListName = findViewById(R.id.playListName);
@@ -94,10 +98,13 @@ public class PlayListView extends AppCompatActivity {
                 switch (i)
                 {
                     case AudioManager.AUDIOFOCUS_GAIN:
-                        mediaPlayer.start();
+                        play();
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS:
-                        mediaPlayer.pause();
+                        mediaPlayer.release();
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                        pause();
                         break;
                 }
             }
@@ -399,21 +406,34 @@ public class PlayListView extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        if (request != null) {
+            manager.abandonAudioFocusRequest(request);
+            System.out.println("Abandoning focus!");
+        }
+
+        finish();
+    }
+
     private int requestFocus()
     {
         System.out.println("Requesting access!");
-        AudioManager manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+        manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
         AudioAttributes playbackAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build();
 
 
-        AudioFocusRequest request = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+        request = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                 .setAudioAttributes(playbackAttributes)
                 .setAcceptsDelayedFocusGain(true)
                 .setOnAudioFocusChangeListener(focusChangeListener)
                 .build();
+
 
 
         return manager.requestAudioFocus(request);
