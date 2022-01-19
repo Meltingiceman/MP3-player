@@ -37,7 +37,6 @@ import java.util.List;
 public class Detailed_Song_View extends AppCompatActivity {
 
     private CheckBox deleteOption;
-
     private ListView downloads_list;
     private ListView folder_list;
     private ArrayList<String> list_of_files;
@@ -73,7 +72,6 @@ public class Detailed_Song_View extends AppCompatActivity {
             //fill in with blank data for new addition to the playlist (if any)
 
         }
-
 
 
         ImageButton backBtn = (ImageButton) findViewById(R.id.back_btn);
