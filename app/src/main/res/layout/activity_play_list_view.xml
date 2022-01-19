@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/song_progress_bar"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#3A3A3A"
+    android:visibility="visible"
+    tools:context=".PlayListView">
+
+    <include layout="@layout/playlistview_header" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="141dp"
+        android:background="?android:attr/listDivider"
+        android:backgroundTint="@color/white" />
+
+    <ImageButton
+        android:id="@+id/playPause_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="97dp"
+        android:background="@drawable/rounded_btn"
+        android:onClick="playPause_btn_click"
+        android:src="@drawable/play_icon" />
+
+    <ImageButton
+        android:id="@+id/skip_right_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:onClick="skip_right_click"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="101dp"
+        android:layout_marginEnd="124dp"
+        android:background="@drawable/rounded_btn"
+        android:src="@drawable/skip_right" />
+
+    <ImageButton
+        android:id="@+id/skip_left_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:onClick="skip_left_click"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="124dp"
+        android:layout_marginTop="100dp"
+        android:background="@drawable/rounded_btn"
+        android:src="@drawable/skip_left" />
+
+    <ImageButton
+        android:id="@+id/shuffle_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="98dp"
+        android:layout_marginEnd="51dp"
+        android:background="@drawable/rounded_btn"
+        android:src="@drawable/shuffle_icon"
+        android:onClick="shuffle_btn_click"/>
+
+    <ImageButton
+        android:id="@+id/edit_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="66dp"
+        android:layout_marginTop="103dp"
+        android:background="@drawable/rounded_btn"
+        android:onClick="edit_plList_btnClick"
+        android:src="@drawable/gear_button" />
+
+    <View
+        android:id="@+id/divider2"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="-1dp"
+        android:layout_marginTop="87dp"
+        android:background="?android:attr/listDivider"
+        android:backgroundTint="@color/white" />
+
+    <!--- need to make this look better -->
+
+    <!--    <Button-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_alignParentStart="true"-->
+    <!--        android:layout_alignParentTop="true"-->
+
+    <!--        android:layout_alignParentEnd="true"-->
+    <!--        android:layout_marginStart="292dp"-->
+    <!--        android:layout_marginTop="17dp"-->
+
+    <!--        android:layout_marginEnd="8dp"-->
+    <!--        android:background="@drawable/rounded_btn"-->
+
+    <!--        android:maxWidth="115dp"-->
+    <!--        android:maxHeight="31dp"-->
+    <!--        android:minHeight="12dp"-->
+    <!--        android:onClick="edit_plList_btnClick"-->
+    <!--        android:text="Edit playlist"-->
+    <!--        android:textSize="10dp" />-->
+
+    <ListView
+        android:id="@+id/songList"
+        android:layout_width="410dp"
+        android:layout_height="591dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="-1dp"
+        android:layout_marginTop="143dp"
+        android:layout_marginEnd="2dp"
+        android:layout_marginBottom="-3dp" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="312dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="57dp"
+        android:layout_toEndOf="@+id/time"
+        android:longClickable="false"
+        android:progressBackgroundTint="@color/white"
+        android:progressTint="#955FF3"
+        android:scrollbars="horizontal"
+        android:visibility="visible"
+        app:tickMarkTint="#FD0D5E" />
+
+    <TextView
+        android:id="@+id/time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="13dp"
+        android:layout_marginTop="57dp"
+        android:text="00:00/00:00"
+        android:textColor="@color/white" />
+
+    <!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
+    <!--        android:id="@+id/add_song_btn"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_alignParentEnd="true"-->
+    <!--        android:layout_alignParentBottom="true"-->
+    <!--        android:layout_marginEnd="25dp"-->
+    <!--        android:layout_marginBottom="22dp"-->
+    <!--        android:backgroundTint="@color/white"-->
+    <!--        android:clickable="true"-->
+    <!--        android:focusable="false"-->
+    <!--        android:onClick="add_song_btnClick"-->
+    <!--        app:srcCompat="@drawable/add_cross"-->
+    <!--        tools:layout_editor_absoluteX="324dp"-->
+    <!--        tools:layout_editor_absoluteY="644dp" />-->
+
+</RelativeLayout>
