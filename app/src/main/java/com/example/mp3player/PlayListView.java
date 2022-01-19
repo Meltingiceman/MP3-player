@@ -1,7 +1,5 @@
 package com.example.mp3player;
 
-import static android.content.ContentValues.TAG;
-
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -21,7 +19,6 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -65,6 +62,17 @@ public class PlayListView extends AppCompatActivity {
     private int playingIx;
     boolean firstTime = false;
     boolean init;
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        if (request != null) {
+            manager.abandonAudioFocusRequest(request);
+        }
+
+        finish();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -326,8 +334,6 @@ public class PlayListView extends AppCompatActivity {
     public void edit_plList_btnClick(View view)
     {
         if(mediaPlayer.isPlaying()) {
-//            mediaPlayer.pause();
-//            swapPlayPause();
             pause();
         }
 
@@ -402,17 +408,6 @@ public class PlayListView extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-
-        if (request != null) {
-            manager.abandonAudioFocusRequest(request);
-        }
-
-        finish();
-    }
-
     private int requestFocus()
     {
         manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
@@ -484,7 +479,9 @@ public class PlayListView extends AppCompatActivity {
     }
 
     private class MusicIntentReceiver extends BroadcastReceiver {
-        @Override public void onReceive(Context context, Intent intent) {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Intent.ACTION_HEADSET_PLUG) && state != State.IDLE) {
                 int state = intent.getIntExtra("state", -1);
                 switch (state) {
