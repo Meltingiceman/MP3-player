@@ -488,9 +488,6 @@ public class PlayListView extends AppCompatActivity {
                     case 0:
                         pause();
                         break;
-//                    case 1:
-//
-//                        break;
                 }
             }
         }
