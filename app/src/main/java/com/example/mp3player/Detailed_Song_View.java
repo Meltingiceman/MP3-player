@@ -75,6 +75,7 @@ public class Detailed_Song_View extends AppCompatActivity {
         }
 
 
+
         ImageButton backBtn = (ImageButton) findViewById(R.id.back_btn);
         backBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v)
