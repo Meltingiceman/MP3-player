@@ -42,6 +42,8 @@ public class PlayListView extends AppCompatActivity {
         IDLE, PAUSED, PLAYING
     }
 
+    private State state = State.IDLE;
+
     private AudioManager manager;
     private AudioFocusRequest request;
 
@@ -104,6 +106,7 @@ public class PlayListView extends AppCompatActivity {
                         mediaPlayer.release();
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                        System.out.println("LOSS TRANSIENT");
                         pause();
                         break;
                 }
@@ -156,7 +159,9 @@ public class PlayListView extends AppCompatActivity {
                     int mCurrentPos = mediaPlayer.getCurrentPosition() / 1000;
                     progressBar.setProgress(mCurrentPos);
 
-                    if(init)
+                    System.out.println(state);
+
+                    if(state == State.IDLE)
                     {
                         time.setText("--:--/--:--");
                     }
@@ -203,7 +208,7 @@ public class PlayListView extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
 
-                if(playing)
+                if(state == State.PLAYING)
                     play();
 
 
@@ -380,11 +385,13 @@ public class PlayListView extends AppCompatActivity {
 
     private void pause()
     {
+        System.out.println("PAUSING!");
         mediaPlayer.pause();
         ImageButton playPause_btn = findViewById(R.id.playPause_btn);
 
         playPause_btn.setImageResource(R.drawable.play_icon);
         playing = false;
+        state = State.PAUSED;
     }
 
     private void pause_no_icon_change()
@@ -403,6 +410,7 @@ public class PlayListView extends AppCompatActivity {
 
             playPause_btn.setImageResource(R.drawable.pause_icon);
             playing = true;
+            state = State.PLAYING;
         }
     }
 
@@ -495,7 +503,7 @@ public class PlayListView extends AppCompatActivity {
 
     private class MusicIntentReceiver extends BroadcastReceiver {
         @Override public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_HEADSET_PLUG)) {
+            if (intent.getAction().equals(Intent.ACTION_HEADSET_PLUG) && state != State.IDLE) {
                 int state = intent.getIntExtra("state", -1);
                 switch (state) {
                     case 0:
