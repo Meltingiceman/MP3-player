@@ -15,6 +15,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -36,6 +38,10 @@ import java.util.*;
 
 public class PlayListView extends AppCompatActivity {
 
+    private enum State{
+        IDLE, PAUSED, PLAYING
+    }
+
     private int playList_ix;
     private ActivityResultLauncher<Intent> edit_launcher;
     private MusicIntentReceiver receiver;
@@ -45,6 +51,8 @@ public class PlayListView extends AppCompatActivity {
     SeekBar progressBar;
     MediaPlayer mediaPlayer;
     ListView songList;
+    AudioManager.OnAudioFocusChangeListener focusChangeListener;
+
     boolean playing = false;
 
     private Handler progressHandler = new Handler();
@@ -79,6 +87,21 @@ public class PlayListView extends AppCompatActivity {
         //set the playList name and playList
         playListName.setText(MainActivity.list_of_playLists.get(playList_ix).playListName);
         playList = MainActivity.list_of_playLists.get(playList_ix).songList;
+
+        focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int i) {
+                switch (i)
+                {
+                    case AudioManager.AUDIOFOCUS_GAIN:
+                        mediaPlayer.start();
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS:
+                        mediaPlayer.pause();
+                        break;
+                }
+            }
+        };
 
         //creating the list of songs
         createAdapter();
@@ -365,12 +388,38 @@ public class PlayListView extends AppCompatActivity {
 
     private void play()
     {
-        mediaPlayer.start();
-        ImageButton playPause_btn = findViewById(R.id.playPause_btn);
+        //need to request audio focus before playing
+        if(requestFocus() == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+        {
+            mediaPlayer.start();
+            ImageButton playPause_btn = findViewById(R.id.playPause_btn);
 
-        playPause_btn.setImageResource(R.drawable.pause_icon);
-        playing = true;
+            playPause_btn.setImageResource(R.drawable.pause_icon);
+            playing = true;
+        }
     }
+
+    private int requestFocus()
+    {
+        System.out.println("Requesting access!");
+        AudioManager manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+        AudioAttributes playbackAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+
+
+        AudioFocusRequest request = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(playbackAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener(focusChangeListener)
+                .build();
+
+
+        return manager.requestAudioFocus(request);
+    }
+
+
 
     private void swapPlayPause()
     {
