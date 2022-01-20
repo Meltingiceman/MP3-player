@@ -1,7 +1,5 @@
 package com.example.mp3player;
 
-import static android.content.ContentValues.TAG;
-
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -15,11 +13,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +35,15 @@ import java.util.*;
 
 public class PlayListView extends AppCompatActivity {
 
+    private enum State{
+        IDLE, PAUSED, PLAYING
+    }
+
+    private State state = State.IDLE;
+
+    private AudioManager manager;
+    private AudioFocusRequest request;
+
     private int playList_ix;
     private ActivityResultLauncher<Intent> edit_launcher;
     private MusicIntentReceiver receiver;
@@ -45,6 +53,8 @@ public class PlayListView extends AppCompatActivity {
     SeekBar progressBar;
     MediaPlayer mediaPlayer;
     ListView songList;
+    AudioManager.OnAudioFocusChangeListener focusChangeListener;
+
     boolean playing = false;
 
     private Handler progressHandler = new Handler();
@@ -52,6 +62,17 @@ public class PlayListView extends AppCompatActivity {
     private int playingIx;
     boolean firstTime = false;
     boolean init;
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        if (request != null) {
+            manager.abandonAudioFocusRequest(request);
+        }
+
+        finish();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +90,7 @@ public class PlayListView extends AppCompatActivity {
         progressBar = findViewById(R.id.seekBar);
         progressBar.setMax(0);
 
+        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         time = findViewById(R.id.time);
         TextView playListName = findViewById(R.id.playListName);
@@ -79,6 +101,24 @@ public class PlayListView extends AppCompatActivity {
         //set the playList name and playList
         playListName.setText(MainActivity.list_of_playLists.get(playList_ix).playListName);
         playList = MainActivity.list_of_playLists.get(playList_ix).songList;
+
+        focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int i) {
+                switch (i)
+                {
+                    case AudioManager.AUDIOFOCUS_GAIN:
+                        play();
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS:
+                        mediaPlayer.release();
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                        pause();
+                        break;
+                }
+            }
+        };
 
         //creating the list of songs
         createAdapter();
@@ -126,7 +166,9 @@ public class PlayListView extends AppCompatActivity {
                     int mCurrentPos = mediaPlayer.getCurrentPosition() / 1000;
                     progressBar.setProgress(mCurrentPos);
 
-                    if(init)
+                    System.out.println(state);
+
+                    if(state == State.IDLE)
                     {
                         time.setText("--:--/--:--");
                     }
@@ -152,8 +194,6 @@ public class PlayListView extends AppCompatActivity {
             }
         });
 
-
-
         progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -173,9 +213,8 @@ public class PlayListView extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
 
-                if(playing)
+                if(state == State.PLAYING)
                     play();
-
 
             }
         });
@@ -205,11 +244,6 @@ public class PlayListView extends AppCompatActivity {
 
                 if(playingIx == i && mediaPlayer.isPlaying())
                     return;
-
-                //Toast.makeText(getApplicationContext(), "This will play item " + i + ".", Toast.LENGTH_LONG).show();
-
-                //DEBUG
-                System.out.println(playList.get(i).path);
 
                 playSong(i);
 
@@ -278,8 +312,6 @@ public class PlayListView extends AppCompatActivity {
             ArrayList<Song> tempList = new ArrayList<Song>();
             tempList.add(temp);
 
-            System.out.println("Song playing is \"" + temp.name + "\"\nindex is " + playingIx);
-
             Collections.shuffle(playList);
 
             for(int i = 0; i < playList.size(); i++)
@@ -302,8 +334,6 @@ public class PlayListView extends AppCompatActivity {
     public void edit_plList_btnClick(View view)
     {
         if(mediaPlayer.isPlaying()) {
-//            mediaPlayer.pause();
-//            swapPlayPause();
             pause();
         }
 
@@ -355,6 +385,7 @@ public class PlayListView extends AppCompatActivity {
 
         playPause_btn.setImageResource(R.drawable.play_icon);
         playing = false;
+        state = State.PAUSED;
     }
 
     private void pause_no_icon_change()
@@ -365,11 +396,34 @@ public class PlayListView extends AppCompatActivity {
 
     private void play()
     {
-        mediaPlayer.start();
-        ImageButton playPause_btn = findViewById(R.id.playPause_btn);
+        //need to request audio focus before playing
+        if(requestFocus() == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+        {
+            mediaPlayer.start();
+            ImageButton playPause_btn = findViewById(R.id.playPause_btn);
 
-        playPause_btn.setImageResource(R.drawable.pause_icon);
-        playing = true;
+            playPause_btn.setImageResource(R.drawable.pause_icon);
+            playing = true;
+            state = State.PLAYING;
+        }
+    }
+
+    private int requestFocus()
+    {
+        manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+        AudioAttributes playbackAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+
+
+        request = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(playbackAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener(focusChangeListener)
+                .build();
+
+        return manager.requestAudioFocus(request);
     }
 
     private void swapPlayPause()
@@ -425,19 +479,15 @@ public class PlayListView extends AppCompatActivity {
     }
 
     private class MusicIntentReceiver extends BroadcastReceiver {
-        @Override public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_HEADSET_PLUG)) {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(Intent.ACTION_HEADSET_PLUG) && state != State.IDLE) {
                 int state = intent.getIntExtra("state", -1);
                 switch (state) {
                     case 0:
-                        Log.d(TAG, "Headset is unplugged");
                         pause();
                         break;
-                    case 1:
-                        Log.d(TAG, "Headset is plugged");
-                        break;
-//                    default:
-//                        Log.d(TAG, "I have no idea what the headset state is");
                 }
             }
         }
@@ -481,7 +531,6 @@ class SongAdapter extends ArrayAdapter<Song>
 
         if(row == null)
         {
-            System.out.println("in if");
             LayoutInflater inflater = ((Activity)context).getLayoutInflater();
             row = inflater.inflate(layoutResourceId, parent, false);
 
@@ -496,7 +545,6 @@ class SongAdapter extends ArrayAdapter<Song>
         }
         else
         {
-            System.out.println("in else");
             holder = (SongHolder) row.getTag();
         }
 
