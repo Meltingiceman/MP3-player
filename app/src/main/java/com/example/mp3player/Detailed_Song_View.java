@@ -95,7 +95,7 @@ public class Detailed_Song_View extends AppCompatActivity {
     //when the user clicks the save button
     public void save_click(View view)
     {
-
+        System.out.println("dsfdsfds");
         EditText name = findViewById(R.id.songName);
         song_name = name.getText().toString();
         if(song_name.length() == 0 || song_selected == null)
