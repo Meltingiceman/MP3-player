@@ -17,6 +17,7 @@ import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -68,7 +69,9 @@ public class PlayListView extends AppCompatActivity {
         super.onBackPressed();
 
         if (request != null) {
+
             manager.abandonAudioFocusRequest(request);
+
         }
 
         finish();
