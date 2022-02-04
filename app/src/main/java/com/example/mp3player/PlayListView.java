@@ -56,8 +56,6 @@ public class PlayListView extends AppCompatActivity {
     ListView songList;
     AudioManager.OnAudioFocusChangeListener focusChangeListener;
 
-    boolean playing = false;
-
     private Handler progressHandler = new Handler();
     private ArrayList<Song> playList;
     private int playingIx;
@@ -89,12 +87,20 @@ public class PlayListView extends AppCompatActivity {
 
         receiver = new MusicIntentReceiver();
         mediaPlayer = new MediaPlayer();
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+
+        mediaPlayer.setAudioAttributes(audioAttributes);
         //mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         progressBar = findViewById(R.id.seekBar);
         progressBar.setMax(0);
 
+        //set it so that when the user presses up on the audio it raises media volume
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
+        //variables for the various views that display information
         time = findViewById(R.id.time);
         TextView playListName = findViewById(R.id.playListName);
         songPlaying = findViewById(R.id.songPlaying);
@@ -134,7 +140,6 @@ public class PlayListView extends AppCompatActivity {
             public void onCompletion(MediaPlayer mediaPlayer) {
                 if(firstTime)
                 {
-                    playing = false;
                     progressBar.setProgress(0);
 
                     nextSong();
@@ -289,7 +294,6 @@ public class PlayListView extends AppCompatActivity {
 
         } catch (IOException e) {
             e.printStackTrace();
-            playing = false;
         }
 
     }
@@ -389,7 +393,6 @@ public class PlayListView extends AppCompatActivity {
         ImageButton playPause_btn = findViewById(R.id.playPause_btn);
 
         playPause_btn.setImageResource(R.drawable.play_icon);
-        playing = false;
 
         if(interrupted)
             state = State.INTERRUPTED;
@@ -400,7 +403,6 @@ public class PlayListView extends AppCompatActivity {
     private void pause_no_icon_change()
     {
         mediaPlayer.pause();
-        playing = false;
     }
 
     private void play()
@@ -412,7 +414,6 @@ public class PlayListView extends AppCompatActivity {
             ImageButton playPause_btn = findViewById(R.id.playPause_btn);
 
             playPause_btn.setImageResource(R.drawable.pause_icon);
-            playing = true;
             state = State.PLAYING;
         }
     }
@@ -448,7 +449,6 @@ public class PlayListView extends AppCompatActivity {
         }
 
         //swap the value of playing
-        playing = !playing;
     }
 
     private String getCurrentTime()

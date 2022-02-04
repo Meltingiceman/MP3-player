@@ -219,6 +219,7 @@ public class MainActivity extends AppCompatActivity {
     //when the plus button is clicked
     public void add_playList_btnClick(View view)
     {
+
         //Toast.makeText(getApplicationContext(), "Hey there!", Toast.LENGTH_LONG).show();
         Intent intent = new Intent(this, AddPlaylist.class);
         add_btn_launcher.launch(intent);
