@@ -37,13 +37,13 @@ import java.util.*;
 public class PlayListView extends AppCompatActivity {
 
     private enum State{
-        IDLE, PAUSED, PLAYING
+        IDLE, PAUSED, PLAYING, INTERRUPTED
     }
 
     private State state = State.IDLE;
 
-    private AudioManager manager;
-    private AudioFocusRequest request;
+    private AudioManager audioManager;
+    private AudioFocusRequest audioFocusRequest;
 
     private int playList_ix;
     private ActivityResultLauncher<Intent> edit_launcher;
@@ -68,10 +68,10 @@ public class PlayListView extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
 
-        if (request != null) {
-
-            manager.abandonAudioFocusRequest(request);
-
+        if (audioFocusRequest != null) {
+            mediaPlayer.pause();
+            mediaPlayer.release();
+            audioManager.abandonAudioFocusRequest(audioFocusRequest);
         }
 
         finish();
@@ -89,7 +89,7 @@ public class PlayListView extends AppCompatActivity {
 
         receiver = new MusicIntentReceiver();
         mediaPlayer = new MediaPlayer();
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        //mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         progressBar = findViewById(R.id.seekBar);
         progressBar.setMax(0);
 
@@ -111,13 +111,15 @@ public class PlayListView extends AppCompatActivity {
                 switch (i)
                 {
                     case AudioManager.AUDIOFOCUS_GAIN:
-                        play();
+                        if(state == State.INTERRUPTED)
+                            play();
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS:
                         mediaPlayer.release();
+                        audioManager.abandonAudioFocusRequest(audioFocusRequest);
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                        pause();
+                        pause(true);
                         break;
                 }
             }
@@ -337,7 +339,7 @@ public class PlayListView extends AppCompatActivity {
     public void edit_plList_btnClick(View view)
     {
         if(mediaPlayer.isPlaying()) {
-            pause();
+            pause(false);
         }
 
         Intent intent = new Intent(this, Edit_Playlist.class);
@@ -375,20 +377,24 @@ public class PlayListView extends AppCompatActivity {
     {
 
         if(mediaPlayer.isPlaying())
-            pause();
+            pause(false);
         else
             play();
 
     }
 
-    private void pause()
+    private void pause(boolean interrupted)
     {
         mediaPlayer.pause();
         ImageButton playPause_btn = findViewById(R.id.playPause_btn);
 
         playPause_btn.setImageResource(R.drawable.play_icon);
         playing = false;
-        state = State.PAUSED;
+
+        if(interrupted)
+            state = State.INTERRUPTED;
+        else
+            state = State.PAUSED;
     }
 
     private void pause_no_icon_change()
@@ -413,20 +419,20 @@ public class PlayListView extends AppCompatActivity {
 
     private int requestFocus()
     {
-        manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+        audioManager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
         AudioAttributes playbackAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build();
 
 
-        request = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+        audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                 .setAudioAttributes(playbackAttributes)
                 .setAcceptsDelayedFocusGain(true)
                 .setOnAudioFocusChangeListener(focusChangeListener)
                 .build();
 
-        return manager.requestAudioFocus(request);
+        return audioManager.requestAudioFocus(audioFocusRequest);
     }
 
     private void swapPlayPause()
@@ -489,7 +495,7 @@ public class PlayListView extends AppCompatActivity {
                 int state = intent.getIntExtra("state", -1);
                 switch (state) {
                     case 0:
-                        pause();
+                        pause(false);
                         break;
                 }
             }
