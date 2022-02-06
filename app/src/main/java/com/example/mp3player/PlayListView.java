@@ -67,7 +67,7 @@ public class PlayListView extends AppCompatActivity {
         super.onBackPressed();
 
         if (audioFocusRequest != null) {
-            mediaPlayer.pause();
+            mediaPlayer.pause();   //don't know if pausing is necessary for releasing
             mediaPlayer.release();
             audioManager.abandonAudioFocusRequest(audioFocusRequest);
         }
