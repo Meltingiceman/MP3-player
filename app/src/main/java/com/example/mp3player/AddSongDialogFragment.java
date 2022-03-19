@@ -3,7 +3,6 @@ package com.example.mp3player;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,11 +51,6 @@ public class AddSongDialogFragment extends DialogFragment
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         listener.onDialogPositiveClick(AddSongDialogFragment.this);
-
-//                        Dialog dialog = getDialog();
-//                        EditText editText = dialog.findViewById(R.id.PL_Name);
-//
-//                        String name = editText.getText().toString();
 
                     }
                 })
