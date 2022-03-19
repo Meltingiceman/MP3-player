@@ -26,10 +26,6 @@
             android:name=".PlayListView"
             android:exported="false" />
         <activity
-            android:name=".AddPlaylist"
-            android:exported="false"
-            android:windowSoftInputMode="adjustPan" />
-        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

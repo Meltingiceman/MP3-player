@@ -7,10 +7,14 @@ import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
@@ -19,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -36,7 +41,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+                            implements AddSongDialogFragment.AddSongDialogListener{
 
     public static final String playListName_key = "PLAYLIST_ADD";
     public static final String playListRoute_key = "PLAYLIST_ROUTE";
@@ -82,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //create the ActivityResultLauncher(s)
+
+        //Result action of adding a new playlist
         add_btn_launcher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
@@ -185,6 +193,41 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //when the plus button is clicked
+    public void add_playList_btnClick(View view)
+    {
+
+        DialogFragment newFragment = new AddSongDialogFragment();
+        newFragment.show(getSupportFragmentManager(), "add_playlist");
+
+
+    }
+
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog)
+    {
+        Dialog d = dialog.getDialog();
+        EditText editText = (EditText)d.findViewById(R.id.PL_Name);
+
+        String name = editText.getText().toString();
+
+        if(name.length() != 0)
+        {
+            PlayList playList = new PlayList();
+            playList.playListName = name;
+            list_of_playLists.add(playList);
+            handler.writeToJSON(list_of_playLists);
+            displayList();
+        }
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog)
+    {
+        Dialog d = dialog.getDialog();
+        d.cancel();
+    }
+
     //takes the contents of the list_of_playLists arraylist and displays it
     //in the listView
     protected void displayList()
@@ -216,15 +259,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //when the plus button is clicked
-    public void add_playList_btnClick(View view)
-    {
 
-        //Toast.makeText(getApplicationContext(), "Hey there!", Toast.LENGTH_LONG).show();
-        Intent intent = new Intent(this, AddPlaylist.class);
-        add_btn_launcher.launch(intent);
-
-    }
 
     //when the gear button is clicked
     public void optionOnClick(View view)
@@ -341,6 +376,3 @@ class Song
     public String name;
     public String path;
 }
-
-
-

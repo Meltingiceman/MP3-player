@@ -56,7 +56,7 @@ public class PlayListView extends AppCompatActivity {
     ListView songList;
     AudioManager.OnAudioFocusChangeListener focusChangeListener;
 
-    private Handler progressHandler = new Handler();
+    private final Handler progressHandler = new Handler();
     private ArrayList<Song> playList;
     private int playingIx;
     boolean firstTime = false;
@@ -66,9 +66,13 @@ public class PlayListView extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
 
+        System.out.println("DEBUG: BACK BTN PRESSED");
+
         if (audioFocusRequest != null) {
             mediaPlayer.pause();   //don't know if pausing is necessary for releasing
             mediaPlayer.release();
+            mediaPlayer = null;
+
             audioManager.abandonAudioFocusRequest(audioFocusRequest);
         }
 
@@ -111,23 +115,21 @@ public class PlayListView extends AppCompatActivity {
         playListName.setText(MainActivity.list_of_playLists.get(playList_ix).playListName);
         playList = MainActivity.list_of_playLists.get(playList_ix).songList;
 
-        focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
-            @Override
-            public void onAudioFocusChange(int i) {
-                switch (i)
-                {
-                    case AudioManager.AUDIOFOCUS_GAIN:
-                        if(state == State.INTERRUPTED)
-                            play();
-                        break;
-                    case AudioManager.AUDIOFOCUS_LOSS:
-                        mediaPlayer.release();
-                        audioManager.abandonAudioFocusRequest(audioFocusRequest);
-                        break;
-                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                        pause(true);
-                        break;
-                }
+        focusChangeListener = i -> {
+            System.out.println("AUDIO_FOCUS_CHANGE");
+            switch (i)
+            {
+                case AudioManager.AUDIOFOCUS_GAIN:
+                    if(state == State.INTERRUPTED)
+                        play();
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS:
+                    mediaPlayer.release();
+                    audioManager.abandonAudioFocusRequest(audioFocusRequest);
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                    pause(true);
+                    break;
             }
         };
 
@@ -135,36 +137,30 @@ public class PlayListView extends AppCompatActivity {
         createAdapter();
 
         //media players actions to perform upon completion
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                if(firstTime)
-                {
-                    progressBar.setProgress(0);
+        mediaPlayer.setOnCompletionListener(mediaPlayer -> {
+            if(firstTime)
+            {
+                progressBar.setProgress(0);
 
-                    nextSong();
-                }
-                firstTime = true;
-                //no need to call swapPlayPause since the playing will carry over to the next song
+                nextSong();
             }
+            firstTime = true;
+            //no need to call swapPlayPause since the playing will carry over to the next song
         });
 
         edit_launcher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        ArrayList<PlayList> list_of_playLists = MainActivity.list_of_playLists;
-                        System.out.println("Name back from activity: " + list_of_playLists.get(playList_ix).playListName);
+                result -> {
+                    ArrayList<PlayList> list_of_playLists = MainActivity.list_of_playLists;
+                    System.out.println("Name back from activity: " + list_of_playLists.get(playList_ix).playListName);
 
-                        playListName.setText(list_of_playLists.get(playList_ix).playListName);
-                        //numSongs.setText(Integer.toString(playList.size())  + " song(s) in playlist");
-                        mediaPlayer.reset();
-                        playingIx = -1;
-                        createAdapter();
+                    playListName.setText(list_of_playLists.get(playList_ix).playListName);
+                    //numSongs.setText(Integer.toString(playList.size())  + " song(s) in playlist");
+                    mediaPlayer.reset();
+                    playingIx = -1;
+                    createAdapter();
 
 
-                    }
                 }
         );
 
@@ -228,18 +224,14 @@ public class PlayListView extends AppCompatActivity {
 
             }
         });
-    }
 
-    @Override
-    protected void onResume() {
+        //register the receiver and intent at the end of onCreate
         IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
         registerReceiver(receiver, filter);
-        super.onResume();
     }
 
     protected void createAdapter()
     {
-
         //create the adapter
         SongAdapter arrayAdapter = new SongAdapter(this,
                 R.layout.simple_song_list_item,  //the layout that is used
@@ -248,16 +240,13 @@ public class PlayListView extends AppCompatActivity {
 
         //set the adapter
         songList.setAdapter(arrayAdapter);
-        songList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+        songList.setOnItemClickListener((adapterView, view, i, l) -> {
 
-                if(playingIx == i && mediaPlayer.isPlaying())
-                    return;
+            if(playingIx == i && mediaPlayer.isPlaying())
+                return;
 
-                playSong(i);
+            playSong(i);
 
-            }
         });
 
     }
@@ -389,6 +378,7 @@ public class PlayListView extends AppCompatActivity {
 
     private void pause(boolean interrupted)
     {
+        System.out.println("DEBUG: PAUSE");
         mediaPlayer.pause();
         ImageButton playPause_btn = findViewById(R.id.playPause_btn);
 
@@ -471,7 +461,7 @@ public class PlayListView extends AppCompatActivity {
 
     private String getMaxTime()
     {
-        String result = "";
+        String result;
         int timeSeconds = mediaPlayer.getDuration() / 1000;
 
         int minutes = timeSeconds / 60;
@@ -495,6 +485,7 @@ public class PlayListView extends AppCompatActivity {
                 int state = intent.getIntExtra("state", -1);
                 switch (state) {
                     case 0:
+                        System.out.println("DEBUG: ON RECEIVE");
                         pause(false);
                         break;
                 }
@@ -508,7 +499,7 @@ class SongAdapter extends ArrayAdapter<Song>
 {
     protected Context context;
     protected int layoutResourceId;
-    protected ArrayList<Song> data = null;
+    protected ArrayList<Song> data;
 
     int viewId = 0;
 
