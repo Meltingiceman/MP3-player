@@ -3,8 +3,6 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3-Player/app/src/main/res/drawable/ic_music_folder_alt.xml" value="0.2703125" />
-        <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3-Player/app/src/main/res/drawable/music_note.xml" value="0.2703125" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.23703703703703705" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/add_cross.xml" value="0.3828125" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/big_add_cross.xml" value="0.2361111111111111" />
@@ -15,10 +13,13 @@
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/ic_baseline_pause_24.xml" value="0.23703703703703705" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/ic_baseline_play_arrow_24.xml" value="0.21574074074074073" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/ic_launcher_background.xml" value="0.3828125" />
+        <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/ic_music_folder_alt.xml" value="0.3307291666666667" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/menu_option.xml" value="0.3828125" />
+        <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/music_note.xml" value="0.3307291666666667" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/play_icon.xml" value="0.26666666666666666" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/rounded_btn.xml" value="0.3828125" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/shuffle_icon.xml" value="0.24166666666666667" />
+        <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/three_vertical_dots.xml" value="0.3828125" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/drawable/trashcan.xml" value="0.2101851851851852" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/layout/activity_add_playlist.xml" value="0.33" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/layout/activity_detailed_song_view.xml" value="0.33" />
@@ -34,8 +35,10 @@
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/layout/music_file_list_item.xml" value="0.22760041194644695" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/layout/playlist_button.xml" value="0.780960404380792" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/layout/playlistview_header.xml" value="0.5" />
+        <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/layout/settings_activity.xml" value="0.3145833333333333" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/layout/simple_list_item.xml" value="0.5" />
         <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/layout/simple_song_list_item.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/CandJ/AndroidStudioProjects/MP3Player/app/src/main/res/menu/main_settings_menu.xml" value="0.36666666666666664" />
       </map>
     </option>
   </component>

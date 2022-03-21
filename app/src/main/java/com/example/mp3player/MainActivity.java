@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -13,8 +16,10 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -109,21 +114,23 @@ public class MainActivity extends AppCompatActivity
 
         //Result action for clicking a playList.
         playListClick_launcher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        if(result.getResultCode() == Activity.RESULT_OK)
-                        {
-                            //NEED TO THINK OF OTHER THINGS TO DO HERE (IF ANY)
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if(result.getResultCode() == Activity.RESULT_OK)
+                    {
+                        //NEED TO THINK OF OTHER THINGS TO DO HERE (IF ANY)
 
 
-                            //write to JSON to write any changed to the list of playlists
-                            handler.writeToJSON(list_of_playLists);
-                            displayList();
-                        }
+                        //write to JSON to write any changed to the list of playlists
+                        handler.writeToJSON(list_of_playLists);
+                        displayList();
                     }
+                }
         });
+
+
     }
 
     protected boolean initializeJson(String pathName)
@@ -238,8 +245,6 @@ public class MainActivity extends AppCompatActivity
 
         PlayListAdapter arrayAdapter = new PlayListAdapter(this, R.layout.playlist_button, list_of_playLists);
 
-
-
         view.setAdapter(arrayAdapter);
         Intent intent = new Intent(this, PlayListView.class);
 
@@ -255,17 +260,51 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-
-
-    //when the gear button is clicked
-    public void optionOnClick(View view)
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
     {
-        testClick(view);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_settings_menu, menu);
+        return true;
     }
 
-    public void testClick(View view)
+    //when the more/settings button is clicked
+    public void optionOnClick(View view)
+    {
+
+        PopupMenu popup = new PopupMenu(this, view);
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.main_settings_menu, popup.getMenu());
+
+        /*A work around method to get the menu to function correctly.
+            Basically overrides the itemClick listener of the PopupMenu that's created in this method
+            to call the OnOptionsItemSelected method.*/
+        popup.setOnMenuItemClickListener(menuItem -> onOptionsItemSelected(menuItem));
+
+        popup.show();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+            case R.id.settings:
+                testClick();
+                return true;
+            case R.id.fileManager:
+                testClick();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    //just a test click I use so I know things are working correctly
+    public void testClick()
     {
         Toast.makeText(getApplicationContext(), "test click!", Toast.LENGTH_SHORT).show();
+        System.out.println("Test Click!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 
     public static ArrayList<PlayList> getList_of_playLists()
