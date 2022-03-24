@@ -21,19 +21,23 @@ import java.util.Scanner;
 public class FileHandler {
 
     public static final String DATA_FILE_NAME = "data.json";
+    public static final String SETTINGS_FILE_NAME = "settings.json";
     public static final String DATA_FOLDER_NAME = "appData";
     public static final String MUSIC_FOLDER_NAME = "music";
     private String root;
     File dataFolder;
     File dataFile;
+    File settingsFile;
 
     public FileHandler(String r)
     {
+
         root = r;
         String dataPath = root + File.separator + DATA_FOLDER_NAME;
         String dataFilePath = dataPath + File.separator + DATA_FILE_NAME;
         dataFolder = new File(dataPath);
         dataFile = new File(dataFilePath);
+        settingsFile = new File(root + File.separator + SETTINGS_FILE_NAME);
 
     }
 
@@ -54,13 +58,27 @@ public class FileHandler {
             }
         }
 
-        File musicFolder = new File( root + File.separator + "music" );
+        File musicFolder = new File( root + File.separator + MUSIC_FOLDER_NAME );
         if(!musicFolder.exists())
         {
             musicFolder.mkdir();
         }
 
         return true;
+    }
+
+    public boolean initSettings()
+    {
+        if(!settingsFile.exists())
+        {
+            settingsFile = new File(root + File.separator + SETTINGS_FILE_NAME);
+
+            JSONObject settingsRoot = new JSONObject();
+
+
+        }
+
+        return false;
     }
 
     public boolean initJSON()

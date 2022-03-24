@@ -19,7 +19,6 @@ import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -35,12 +34,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity
                             implements AddSongDialogFragment.AddSongDialogListener{
@@ -156,46 +153,6 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    protected void loadPlayLists(String filePath) throws JSONException {
-        Scanner jsonScanner;
-        String jsonString = "";
-        try {
-            jsonScanner = new Scanner(new File(filePath + File.separator + DATA_FILE_NAME));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        while(jsonScanner.hasNext())
-        {
-            jsonString += jsonScanner.nextLine();
-        }
-
-        JSONObject obj = new JSONObject(jsonString);
-        JSONArray playLists = obj.getJSONArray("playLists");
-        list_of_playLists = new ArrayList<PlayList>();
-
-        for(int i = 0; i < playLists.length(); i++)
-        {
-
-            list_of_playLists.add(i, new PlayList());
-            list_of_playLists.get(i).playListName = playLists.getJSONObject(i).getString("PlayListName");
-
-//            System.out.println("NAME: " + list_of_playLists.get(i).playListName);
-
-//            System.out.println(playLists.getJSONObject(i).getJSONArray("songList"));
-
-            JSONArray songList = playLists.getJSONObject(i).getJSONArray("songList");
-
-            for(int j = 0; j < songList.length(); j++)
-            {
-                list_of_playLists.get(i).songList.add(j, new Song());
-                list_of_playLists.get(i).songList.get(j).name = songList.getJSONObject(j).getString("Name");
-                list_of_playLists.get(i).songList.get(j).path = songList.getJSONObject(j).getString("path");
-            }
-        }
-    }
-
     //when the plus button is clicked
     public void add_playList_btnClick(View view)
     {
@@ -290,14 +247,24 @@ public class MainActivity extends AppCompatActivity
         switch (item.getItemId())
         {
             case R.id.settings:
-                testClick();
+                launchSettings();
                 return true;
             case R.id.fileManager:
-                testClick();
+                launchFileManager();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void launchSettings()
+    {
+        testClick();
+    }
+
+    public void launchFileManager()
+    {
+        testClick();
     }
 
     //just a test click I use so I know things are working correctly
@@ -375,9 +342,6 @@ public class MainActivity extends AppCompatActivity
 
                 }
             });
-
-//            row.setClickable(true);
-//            row.setFocusable(true);
 
             return row;
         }

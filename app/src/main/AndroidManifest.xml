@@ -16,6 +16,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MP3Player">
         <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".Detailed_Song_View"
             android:exported="false" />
         <activity
