@@ -119,19 +119,6 @@
     <!--        android:text="Edit playlist"-->
     <!--        android:textSize="10dp" />-->
 
-    <ListView
-        android:id="@+id/songList"
-        android:layout_width="410dp"
-        android:layout_height="591dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="-1dp"
-        android:layout_marginTop="143dp"
-        android:layout_marginEnd="2dp"
-        android:layout_marginBottom="-3dp" />
-
     <SeekBar
         android:id="@+id/seekBar"
         android:layout_width="312dp"
@@ -158,6 +145,18 @@
         android:layout_marginTop="57dp"
         android:text="00:00/00:00"
         android:textColor="@color/white" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/songList"
+        android:layout_width="match_parent"
+        android:layout_height="587dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="144dp"
+        android:layout_marginEnd="0dp" />
 
     <!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
     <!--        android:id="@+id/add_song_btn"-->

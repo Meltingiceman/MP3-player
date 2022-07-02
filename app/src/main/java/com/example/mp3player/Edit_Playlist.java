@@ -24,7 +24,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Edit_Playlist extends AppCompatActivity {
@@ -122,15 +125,20 @@ public class Edit_Playlist extends AppCompatActivity {
 
     protected void createAdapter()
     {
-        ListView list = findViewById(R.id.edit_music_list);
+        ArrayList<Song> plList = MainActivity.list_of_playLists.get(playList_ix).songList;
+        Song[] tempList = new Song[plList.size()];
 
-        EditSongAdapter adapter = new EditSongAdapter(
-                this,
-                R.layout.edit_pl_list_item,
-                MainActivity.list_of_playLists.get(playList_ix).songList,
-                R.id.songName);
+        for(int i = 0; i < plList.size(); i++)
+        {
+            tempList[i] = plList.get(i);
+        }
+
+        RecyclerView list = findViewById(R.id.edit_music_list);
+
+        EditSongAdapter adapter = new EditSongAdapter(this, tempList);
 
         list.setAdapter(adapter);
+        list.setLayoutManager(new LinearLayoutManager(this));
 
     }
 
@@ -230,38 +238,38 @@ public class Edit_Playlist extends AppCompatActivity {
 
     }
 
-    private class EditSongAdapter extends SongAdapter
-    {
-        public EditSongAdapter(Context context, int resource, List<Song> list, int id)
-        {
-            super(context, resource, list, id);
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            View result = super.getView(position, convertView, parent);
-
-            ImageButton trashCan = result.findViewById(R.id.delete_song_btn);
-            ImageButton edit = result.findViewById(R.id.edit_sng_btn);
-
-            trashCan.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    //Toast.makeText(getApplicationContext(), "delete Click", Toast.LENGTH_SHORT).show();
-                    deleteSong(position);
-                }
-            });
-
-            edit.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    //Toast.makeText(getApplicationContext(), "Edit Click", Toast.LENGTH_SHORT).show();
-                    editSong(position);
-                }
-            });
-
-            return result;
-        }
-    }
+//    private class EditSongAdapter extends SongAdapter
+//    {
+//        public EditSongAdapter(Context context, int resource, List<Song> list, int id)
+//        {
+//            super(context, resource, list, id);
+//        }
+//
+//        @NonNull
+//        @Override
+//        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+//            View result = super.getView(position, convertView, parent);
+//
+//            ImageButton trashCan = result.findViewById(R.id.delete_song_btn);
+//            ImageButton edit = result.findViewById(R.id.edit_sng_btn);
+//
+//            trashCan.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    //Toast.makeText(getApplicationContext(), "delete Click", Toast.LENGTH_SHORT).show();
+//                    deleteSong(position);
+//                }
+//            });
+//
+//            edit.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    //Toast.makeText(getApplicationContext(), "Edit Click", Toast.LENGTH_SHORT).show();
+//                    editSong(position);
+//                }
+//            });
+//
+//            return result;
+//        }
+//    }
 }
