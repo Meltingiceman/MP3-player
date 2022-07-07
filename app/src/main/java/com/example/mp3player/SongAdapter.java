@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+//The adapter used in the PlayListView class that is used by te recyclerview there
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder> {
 
     Song[] songs;
@@ -37,7 +38,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         holder.mainLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                System.out.println("DEBUG: CLICK AT POSITION " + holder.getAdapterPosition());
             }
         });
     }

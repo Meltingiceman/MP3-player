@@ -41,13 +41,14 @@ public class PlayListView extends AppCompatActivity {
     * PLAYING: The MediaPlayer is playing music.
     * INTERRUPTED: The Audio focus has changed to something else and will return.
     * LOWERED: The MediaPlayer has lowered the volume and will raise it momentarily, i.e. the gps is talking*/
-    private enum State{
-        INIT, IDLE, PAUSED, PLAYING, INTERRUPTED, LOWERED
-    }
+//    private enum State{
+//        INIT, IDLE, PAUSED, PLAYING, INTERRUPTED, LOWERED
+//    }
 
     //Activity is initially in the Init state
     private static State state = State.INIT;
 
+    private MusicPlayer musicPlayer;
     private AudioManager audioManager;
     private AudioFocusRequest audioFocusRequest;
 
@@ -87,7 +88,7 @@ public class PlayListView extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_list_view);
-
+        musicPlayer = MusicPlayer.getInstance();
         Intent intent = getIntent();
         playList_ix = intent.getIntExtra("PlayListIndex", -1);
 
@@ -102,7 +103,7 @@ public class PlayListView extends AppCompatActivity {
 //        progressBar = findViewById(R.id.seekBar);
 //        progressBar.setMax(0);
 //
-//        //set it so that when the user presses up on the audio it raises media volume
+//      set it so that when the user presses up on the audio it raises media volume
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
 //        //variables for the various views that display information
@@ -332,20 +333,21 @@ public class PlayListView extends AppCompatActivity {
 //    }
 
     //when the edit playlist button is pressed
-//    public void edit_plList_btnClick(View view)
-//    {
-////        if(mediaPlayer.isPlaying()) {
-////            pause(false);
-////        }
-//
-//        Intent intent = new Intent(this, Edit_Playlist.class);
-//        intent.putExtra("playlist_index", playList_ix);
-//        edit_launcher.launch(intent);
-//
-//        ArrayList<PlayList> list_of_playLists = MainActivity.list_of_playLists;
-//        System.out.println("Name back from activity: " + list_of_playLists.get(playList_ix).playListName);
-//
-//    }
+    public void edit_plList_btnClick(View view)
+    {
+        if(musicPlayer.getState() == State.PLAYING)
+        {
+            musicPlayer.pause();
+        }
+
+        Intent intent = new Intent(this, Edit_Playlist.class);
+        intent.putExtra("playlist_index", playList_ix);
+        edit_launcher.launch(intent);
+
+        ArrayList<PlayList> list_of_playLists = MainActivity.list_of_playLists;
+        System.out.println("Name back from activity: " + list_of_playLists.get(playList_ix).playListName);
+
+    }
 
 //    public void skip_right_click(View view)
 //    {
@@ -496,7 +498,6 @@ public class PlayListView extends AppCompatActivity {
 //        }
 //    }
 }
-
 //// a song adapter used for the listview displaying the songs in the playlist
 //class SongAdapter extends ArrayAdapter<Song>
 //{
