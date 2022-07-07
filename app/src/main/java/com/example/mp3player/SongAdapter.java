@@ -5,19 +5,22 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
+
 //The adapter used in the PlayListView class that is used by te recyclerview there
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder> {
 
-    Song[] songs;
+    ArrayList<Song> songs;
     Context context;
 
-    public SongAdapter(Context ct, Song[] s)
+    public SongAdapter(Context ct, ArrayList<Song> s)
     {
         context = ct;
         songs = s;
@@ -33,25 +36,27 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
-        holder.songName.setText(songs[position].name);
+        holder.songName.setText(songs.get(holder.getAdapterPosition()).name);
 
         holder.mainLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 System.out.println("DEBUG: CLICK AT POSITION " + holder.getAdapterPosition());
+                MusicPlayer.getInstance().playSong(holder.getAdapterPosition());
+                PlayListView.notifyStateChange();
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return songs.length;
+        return songs.size();
     }
 
     public class SongViewHolder extends RecyclerView.ViewHolder{
 
         TextView songName;
-        ConstraintLayout mainLayout;
+        RelativeLayout mainLayout;
 
         public SongViewHolder(@NonNull View itemView) {
             super(itemView);
