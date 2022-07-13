@@ -60,14 +60,16 @@ public class PlayListView extends AppCompatActivity {
         super.onBackPressed();
 
         System.out.println("DEBUG: BACK BTN PRESSED");
-
-        if (audioFocusRequest != null) {
-//            mediaPlayer.pause();   //don't know if pausing is necessary for releasing
-//            mediaPlayer.release();
-//            mediaPlayer = null;
-
-            audioManager.abandonAudioFocusRequest(audioFocusRequest);
-        }
+        MusicPlayer.getInstance().pause();
+        MusicPlayer.getInstance().reset();
+//        if (audioFocusRequest != null) {
+//
+////            mediaPlayer.pause();   //don't know if pausing is necessary for releasing
+////            mediaPlayer.release();
+////            mediaPlayer = null;
+//
+//            audioManager.abandonAudioFocusRequest(audioFocusRequest);
+//        }
 
         finish();
     }
@@ -99,63 +101,6 @@ public class PlayListView extends AppCompatActivity {
         createAdapter();
 
         receiver = new MusicIntentReceiver();
-//        AudioAttributes audioAttributes = new AudioAttributes.Builder()
-//                .setUsage(AudioAttributes.USAGE_MEDIA)
-//                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-//                .build();
-//
-//        mediaPlayer.setAudioAttributes(audioAttributes);
-//        //mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-//        progressBar = findViewById(R.id.seekBar);
-//        progressBar.setMax(0);
-//
-//      set it so that when the user presses up on the audio it raises media volume
-
-
-//        //variables for the various views that display information
-//        time = findViewById(R.id.time);
-
-//        songPlaying = findViewById(R.id.songPlaying);
-//        songList = findViewById(R.id.songList);
-//        ImageButton gear = findViewById(R.id.edit_btn);
-//
-//        //set the playList name and playList
-
-//        playList = MainActivity.list_of_playLists.get(playList_ix).songList;
-//
-//        focusChangeListener = i -> {
-//            System.out.println("AUDIO_FOCUS_CHANGE");
-//            switch (i)
-//            {
-//                case AudioManager.AUDIOFOCUS_GAIN:
-//                    if(state == State.INTERRUPTED)
-//                        play();
-//                    break;
-//                case AudioManager.AUDIOFOCUS_LOSS:
-//                    mediaPlayer.release();
-//                    audioManager.abandonAudioFocusRequest(audioFocusRequest);
-//                    break;
-//                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-//                    pause(true);
-//                    break;
-//            }
-//        };
-//
-//        //creating the list of songs
-//        createAdapter();
-//
-////        //media players actions to perform upon completion
-////        mediaPlayer.setOnCompletionListener(mediaPlayer -> {
-////            if(firstTime)
-////            {
-////                progressBar.setProgress(0);
-////
-////                nextSong();
-////            }
-////            firstTime = true;
-////            //no need to call swapPlayPause since the playing will carry over to the next song
-////        });
-//
         edit_launcher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -293,34 +238,17 @@ public class PlayListView extends AppCompatActivity {
         listAdapter.notifyDataSetChanged();
     }
 
-//    public void playSong(int ix)
-//    {
-//        try {
-//            //need to reset the media player before changing the data source
-//
-//            mediaPlayer.reset();
-//            mediaPlayer.setDataSource(playList.get(ix).path);
-//            mediaPlayer.prepare();
-//
-//            //divide by 1000 here to go from milliseconds to seconds
-//            progressBar.setMax(mediaPlayer.getDuration() / 1000);
-//            time.setText(getCurrentTime() + "/" + getMaxTime());
-//            play();
-//
-//            playingIx = ix;
-//            songPlaying.setText("Now playing: " + playList.get(playingIx).name);
-//            init = false;
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
-
     public void shuffle_btn_click(View view)
     {
         MusicPlayer.getInstance().shuffle();
-        notifyStateChange();
+
+        if (MusicPlayer.getInstance().getPreviousState() == State.IDLE) {
+            notifyStateChange();
+        }
+//        else{
+//            listAdapter.notifyDataSetChanged();
+//        }
+
     }
 
     //when the edit playlist button is pressed
@@ -372,56 +300,24 @@ public class PlayListView extends AppCompatActivity {
             notifyStateChange();
         }
     }
-//
-//    private void pause(boolean interrupted)
+
+//    private int requestFocus()
 //    {
-//        System.out.println("DEBUG: PAUSE");
-//        mediaPlayer.pause();
-//        ImageButton playPause_btn = findViewById(R.id.playPause_btn);
+//        audioManager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+//        AudioAttributes playbackAttributes = new AudioAttributes.Builder()
+//                .setUsage(AudioAttributes.USAGE_MEDIA)
+//                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+//                .build();
 //
-//        playPause_btn.setImageResource(R.drawable.play_icon);
 //
-//        if(interrupted)
-//            state = State.INTERRUPTED;
-//        else
-//            state = State.PAUSED;
+//        audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+//                .setAudioAttributes(playbackAttributes)
+//                .setAcceptsDelayedFocusGain(true)
+//                .setOnAudioFocusChangeListener(focusChangeListener)
+//                .build();
+//
+//        return audioManager.requestAudioFocus(audioFocusRequest);
 //    }
-//
-//    private void pause_no_icon_change()
-//    {
-//        mediaPlayer.pause();
-//    }
-//
-//    private void play()
-//    {
-//        //need to request audio focus before playing
-//        if(requestFocus() == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
-//        {
-//            mediaPlayer.start();
-//            ImageButton playPause_btn = findViewById(R.id.playPause_btn);
-//
-//            playPause_btn.setImageResource(R.drawable.pause_icon);
-//            state = State.PLAYING;
-//        }
-//    }
-
-    private int requestFocus()
-    {
-        audioManager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
-        AudioAttributes playbackAttributes = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .build();
-
-
-        audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                .setAudioAttributes(playbackAttributes)
-                .setAcceptsDelayedFocusGain(true)
-                .setOnAudioFocusChangeListener(focusChangeListener)
-                .build();
-
-        return audioManager.requestAudioFocus(audioFocusRequest);
-    }
 
     private class MusicIntentReceiver extends BroadcastReceiver {
 

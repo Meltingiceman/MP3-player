@@ -1,6 +1,7 @@
 package com.example.mp3player;
 
 import android.media.MediaPlayer;
+import android.media.AudioManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,24 +11,28 @@ import java.util.Collections;
 public class MusicPlayer {
 
     private State state;
+    private State previousState;
+
     private ArrayList<Song> playList;
     private MediaPlayer player;
     private int song_ix;
     private static MusicPlayer instance = new MusicPlayer();
 
+    private AudioManager audioManager;
+
     private MusicPlayer()
     {
         //MusicPlayer is being initialized
         state = State.INIT;
+        previousState = null;
         player = new MediaPlayer();
 
-        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                System.out.println("DEBUG: PLAYING NEXT SONG");
-                nextSong();
-                PlayListView.notifyStateChange();
-            }
+
+
+        player.setOnCompletionListener(mediaPlayer -> {
+            System.out.println("DEBUG: PLAYING NEXT SONG");
+            nextSong();
+            PlayListView.notifyStateChange();
         });
     }
 
@@ -35,12 +40,17 @@ public class MusicPlayer {
     {
         //once a playlist is loaded then the MusicPlayer is ready and in the idle state
         playList = list;
-        state = State.IDLE;
+        //state = State.IDLE;
+        changeState(State.IDLE);
+
         song_ix = -1;
     }
 
     public void playSong(int ix)
     {
+
+
+
         if(ix == song_ix || state == State.INIT || ix < 0 || ix > playList.size()) {
             System.out.println("DEBUG: MUSICPLAYER IS NOT INITIALIZED RETURNING");
             System.out.println("SONG_IX: " +song_ix);
@@ -57,7 +67,8 @@ public class MusicPlayer {
 
             player.start();
 
-            state = State.PLAYING;
+            //state = State.PLAYING;
+            changeState(State.PLAYING);
         }
         catch (IOException e)
         {
@@ -72,7 +83,8 @@ public class MusicPlayer {
         if (state == State.PLAYING)
         {
             player.pause();
-            state = State.PAUSED;
+            //state = State.PAUSED;
+            changeState(State.PAUSED);
         }
     }
 
@@ -81,7 +93,8 @@ public class MusicPlayer {
         if(state == State.PAUSED)
         {
             player.start();
-            state = State.PLAYING;
+            //state = State.PLAYING;
+            changeState(State.PLAYING);
         }
     }
 
@@ -97,6 +110,11 @@ public class MusicPlayer {
     public State getState()
     {
         return state;
+    }
+
+    public State getPreviousState()
+    {
+        return previousState;
     }
 
     public int getPlayListIndex()
@@ -133,6 +151,10 @@ public class MusicPlayer {
 
     public void nextSong()
     {
+        //if the musicplayer hasn't been played or isn't initialized then ignore the call
+        if(state == State.INIT || state == State.IDLE)
+            return;
+
         if(song_ix == playList.size() - 1)
         {
             playSong(0);
@@ -145,6 +167,10 @@ public class MusicPlayer {
 
     public void previousSong()
     {
+        //if the musicplayer hasn't been played or isn't initialized then ignore the call
+        if(state == State.INIT || state == State.IDLE)
+            return;
+
         if(song_ix <= 0)
         {
             song_ix = playList.size() - 1;
@@ -159,32 +185,38 @@ public class MusicPlayer {
 
     public void shuffle()
     {
+        /* If the MusicPlayer is playing then move the currently playing song to the top of the playList
+        * and shuffle the rest of the list
+        * */
         if(state == State.PLAYING)
         {
             System.out.println("DEBUG: SHUFFLING WHILE PLAYING");
             Song temp = playList.get(song_ix);
-            ArrayList<Song> tempList = new ArrayList<Song>();
 
-            tempList.add(temp);
+            //shuffle the playList
             Collections.shuffle(playList);
 
+            //look for the index of the currently playing song
             for(int i = 0; i < playList.size(); i++)
             {
-                if(!playList.get(i).name.equals(temp.name))
+                if(playList.get(i).name.equals(temp.name))
                 {
-                    tempList.add(playList.get(i));
+                    //swap the playing song to the top of the list and exit the loop
+                    Collections.swap(playList, 0, i);
+                    break;
                 }
             }
 
-            playList = tempList;
             song_ix = 0;
             //DON'T playSong() here or it will restart the current playing song
         }
+        /* If the musicPlayer is not playing then just shuffle the list and play the first song */
         else if(state == State.PAUSED || state == State.IDLE)
         {
+            System.out.println("DEBUG: SHUFFLING WHILE PAUSED OR IDLE");
             Collections.shuffle(playList);
-            song_ix = 0;
-            playSong(song_ix);
+            song_ix = -1;
+            playSong(0);
         }
     }
 
@@ -192,6 +224,17 @@ public class MusicPlayer {
     {
         song_ix = -1;
         state = State.IDLE;
+        previousState = null;
+    }
+
+    // a method used internally to change the state of the music player and keeping track of the previous state
+    private void changeState(State newState)
+    {
+        if(newState == state)
+            return;
+
+        previousState = state;
+        state = newState;
     }
 
     public static MusicPlayer getInstance()
