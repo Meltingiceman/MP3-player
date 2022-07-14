@@ -29,11 +29,14 @@ public class MusicPlayer {
 
 
 
-        player.setOnCompletionListener(mediaPlayer -> {
-            System.out.println("DEBUG: PLAYING NEXT SONG");
-            nextSong();
-            PlayListView.notifyStateChange();
-        });
+//        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+//            @Override
+//            public void onCompletion(MediaPlayer mediaPlayer) {
+//                System.out.println("DEBUG: PLAYING NEXT SONG");
+//                MusicPlayer.this.nextSong();
+//                PlayListView.notifyStateChange();
+//            }
+//        });
     }
 
     public void loadPlayList(ArrayList<Song> list)
@@ -44,6 +47,11 @@ public class MusicPlayer {
         changeState(State.IDLE);
 
         song_ix = -1;
+    }
+
+    public void setOnCompletionListener(MediaPlayer.OnCompletionListener listener)
+    {
+        player.setOnCompletionListener(listener);
     }
 
     public void playSong(int ix)

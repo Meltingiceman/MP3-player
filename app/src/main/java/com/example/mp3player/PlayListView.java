@@ -42,14 +42,15 @@ public class PlayListView extends AppCompatActivity {
     private static int songIx = -1;
     private ActivityResultLauncher<Intent> edit_launcher;
     private MusicIntentReceiver receiver;
+    public static boolean changeState;
 
-    private static TextView time;
-    private static TextView songPlaying;
-    private static SeekBar progressBar;
-    private static ImageButton playPauseButton;
+    private TextView time;
+    private TextView songPlaying;
+    private SeekBar progressBar;
+    private ImageButton playPauseButton;
 
     private RecyclerView songList;
-    private static SongAdapter listAdapter;
+    private SongAdapter listAdapter;
     AudioManager.OnAudioFocusChangeListener focusChangeListener;
 
     private final Handler progressHandler = new Handler();
@@ -78,7 +79,7 @@ public class PlayListView extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_list_view);
-
+        changeState = false;
         Intent intent = getIntent();
         playList_ix = intent.getIntExtra("PlayListIndex", -1);
         playList = MainActivity.list_of_playLists.get(playList_ix).songList;
@@ -95,9 +96,16 @@ public class PlayListView extends AppCompatActivity {
 
         //load the selected playlist into the MusicPlayer
         MusicPlayer.getInstance().loadPlayList(playList);
+        MusicPlayer.getInstance().setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                notifyStateChange();
+            }
+        });
 
         playListName.setText(MainActivity.list_of_playLists.get(playList_ix).playListName);
 
+        //creates and attaches the adapter that the recyclerView
         createAdapter();
 
         receiver = new MusicIntentReceiver();
@@ -119,6 +127,12 @@ public class PlayListView extends AppCompatActivity {
             public void run() {
                 if(MusicPlayer.getInstance().getState() != State.INIT &&
                         MusicPlayer.getInstance().getState() != State.INTERRUPTED) {
+
+                    if(changeState)
+                    {
+                        changeState = false;
+                        notifyStateChange();
+                    }
 
                     int mCurrentPos = MusicPlayer.getInstance().getCurrentTime() / 1000;
                     progressBar.setProgress(mCurrentPos);
@@ -202,7 +216,7 @@ public class PlayListView extends AppCompatActivity {
         songList.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    public static void notifyStateChange()
+    public void notifyStateChange()
     {
 
         //if the state change was PAUSED/IDLE --> PLAYING
