@@ -2,6 +2,7 @@ package com.example.mp3player;
 
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,9 +14,11 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 //The adapter used in the PlayListView class that is used by te recyclerview there
-public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder> {
+public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder> implements
+        ItemMoveCallback.ItemTouchHelperContract{
 
     ArrayList<Song> songs;
     Context context;
@@ -47,11 +50,34 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
                 PlayListView.changeState = true;
             }
         });
+
+
     }
 
     @Override
     public int getItemCount() {
         return songs.size();
+    }
+
+    @Override
+    public void onRowMoved(int fromPosition, int toPosition) {
+        Collections.swap(songs, fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
+
+        System.out.println("DEBUG FROMPOSITION: " + fromPosition);
+        System.out.println("DEBUG TOPOSITION: " + toPosition);
+
+        MusicPlayer.getInstance().notifySwap(fromPosition, toPosition);
+    }
+
+    @Override
+    public void onRowSelected(SongViewHolder myViewHolder) {
+        myViewHolder.mainLayout.setBackgroundColor(Color.GRAY);
+    }
+
+    @Override
+    public void onRowClear(SongViewHolder myViewHolder) {
+        myViewHolder.mainLayout.setBackgroundColor(Color.WHITE);
     }
 
     public class SongViewHolder extends RecyclerView.ViewHolder{

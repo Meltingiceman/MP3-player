@@ -245,6 +245,14 @@ public class MusicPlayer {
         state = newState;
     }
 
+    public void notifySwap(int fromPosition, int toPosition)
+    {
+        Collections.swap(playList, fromPosition, toPosition);
+
+        if(state == State.PLAYING || state == State.PAUSED)
+            song_ix = toPosition;
+    }
+
     public static MusicPlayer getInstance()
     {
         return instance;

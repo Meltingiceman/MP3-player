@@ -16,7 +16,9 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -97,6 +99,8 @@ public class PlayListView extends AppCompatActivity {
         //creates and attaches the adapter that the recyclerView
         createAdapter();
 
+
+
         receiver = new MusicIntentReceiver();
         edit_launcher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -111,6 +115,7 @@ public class PlayListView extends AppCompatActivity {
                 }
         );
 
+        //Code to be executed continuously int the background on another thread
         PlayListView.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -138,10 +143,12 @@ public class PlayListView extends AppCompatActivity {
                     progressHandler.postDelayed(this, 1000);
 
                     //Don't really know why this is needed but without this items in the recyclerview disappear
-                    listAdapter.notifyDataSetChanged();
+                    //listAdapter.notifyDataSetChanged();
                 }
             }
         });
+
+        //listeners for the seekbar that represents the progress in a song
         progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -155,7 +162,7 @@ public class PlayListView extends AppCompatActivity {
                     time.setText(timer);
 
                     //Don't really know why this is needed but without this items in the recyclerview disappear
-                    listAdapter.notifyDataSetChanged();
+                    //listAdapter.notifyDataSetChanged();
                 }
             }
 
@@ -176,6 +183,26 @@ public class PlayListView extends AppCompatActivity {
 //        //register the receiver and intent at the end of onCreate
         IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
         registerReceiver(receiver, filter);
+
+
+
+//        //ItemTouchHelper to allow drag and drop on playListView
+//        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(
+//                ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END,
+//                0) {
+//            @Override
+//            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+//                return false;
+//            }
+//
+//            @Override
+//            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+//
+//            }
+//        };
+//
+//        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
+//        itemTouchHelper.attachToRecyclerView(songList);
 
     }
 
@@ -201,6 +228,11 @@ public class PlayListView extends AppCompatActivity {
     protected void createAdapter()
     {
         listAdapter = new SongAdapter(this, playList);
+
+        ItemTouchHelper.Callback callback = new ItemMoveCallback(listAdapter);
+        ItemTouchHelper helper = new ItemTouchHelper(callback);
+        helper.attachToRecyclerView(songList);
+
         songList.setAdapter(listAdapter);
         songList.setLayoutManager(new LinearLayoutManager(this));
     }
