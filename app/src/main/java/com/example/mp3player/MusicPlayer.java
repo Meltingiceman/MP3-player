@@ -26,21 +26,9 @@ public class MusicPlayer {
         state = State.INIT;
         previousState = null;
         player = new MediaPlayer();
-
-
-
-//        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-//            @Override
-//            public void onCompletion(MediaPlayer mediaPlayer) {
-//                System.out.println("DEBUG: PLAYING NEXT SONG");
-//                MusicPlayer.this.nextSong();
-//                PlayListView.notifyStateChange();
-//            }
-//        });
     }
 
-    public void loadPlayList(ArrayList<Song> list)
-    {
+    public void loadPlayList(ArrayList<Song> list) {
         //once a playlist is loaded then the MusicPlayer is ready and in the idle state
         playList = list;
         //state = State.IDLE;
@@ -56,9 +44,6 @@ public class MusicPlayer {
 
     public void playSong(int ix)
     {
-
-
-
         if(ix == song_ix || state == State.INIT || ix < 0 || ix > playList.size()) {
             System.out.println("DEBUG: MUSICPLAYER IS NOT INITIALIZED RETURNING");
             System.out.println("SONG_IX: " +song_ix);
@@ -84,6 +69,12 @@ public class MusicPlayer {
                   playList.get(song_ix).name + " ALONG PATH " + playList.get(song_ix).path);
             return;
         }
+
+        player.setOnCompletionListener(mediaPlayer -> {
+            System.out.println("DEBUG: PLAYING NEXT SONG");
+            MusicPlayer.this.nextSong();
+            PlayListView.changeState = true;
+        });
     }
 
     public void pause()
@@ -162,6 +153,8 @@ public class MusicPlayer {
         //if the musicplayer hasn't been played or isn't initialized then ignore the call
         if(state == State.INIT || state == State.IDLE)
             return;
+
+        System.out.println("DEBUG PLAYSONG SONG_IX: " + song_ix);
 
         if(song_ix == playList.size() - 1)
         {
@@ -245,12 +238,13 @@ public class MusicPlayer {
         state = newState;
     }
 
+    //code to be executed by the MusicPlayer if the order of the songs are changed
     public void notifySwap(int fromPosition, int toPosition)
     {
-        Collections.swap(playList, fromPosition, toPosition);
-
-        if(state == State.PLAYING || state == State.PAUSED)
+        if(fromPosition == song_ix && (state == State.PLAYING || state == State.PAUSED))
+        {
             song_ix = toPosition;
+        }
     }
 
     public static MusicPlayer getInstance()

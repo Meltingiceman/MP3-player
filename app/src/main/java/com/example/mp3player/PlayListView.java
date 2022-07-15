@@ -30,7 +30,6 @@ public class PlayListView extends AppCompatActivity {
     private AudioFocusRequest audioFocusRequest;
 
     private static int playList_ix;
-    private static int songIx = -1;
     private ActivityResultLauncher<Intent> edit_launcher;
     private MusicIntentReceiver receiver;
     public static boolean changeState;
@@ -87,12 +86,7 @@ public class PlayListView extends AppCompatActivity {
 
         //load the selected playlist into the MusicPlayer
         MusicPlayer.getInstance().loadPlayList(playList);
-        MusicPlayer.getInstance().setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                notifyStateChange();
-            }
-        });
+        MusicPlayer.getInstance().setOnCompletionListener(mediaPlayer -> notifyStateChange());
 
         playListName.setText(MainActivity.list_of_playLists.get(playList_ix).playListName);
 
@@ -184,26 +178,6 @@ public class PlayListView extends AppCompatActivity {
         IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
         registerReceiver(receiver, filter);
 
-
-
-//        //ItemTouchHelper to allow drag and drop on playListView
-//        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(
-//                ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END,
-//                0) {
-//            @Override
-//            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-//                return false;
-//            }
-//
-//            @Override
-//            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-//
-//            }
-//        };
-//
-//        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
-//        itemTouchHelper.attachToRecyclerView(songList);
-
     }
 
     private String convertTime(int time)
@@ -270,7 +244,7 @@ public class PlayListView extends AppCompatActivity {
             playPauseButton.setImageResource(R.drawable.play_icon);
         }
 
-        listAdapter.notifyDataSetChanged();
+        //listAdapter.notifyDataSetChanged();
     }
 
     public void shuffle_btn_click(View view)

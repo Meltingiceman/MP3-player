@@ -67,6 +67,12 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         System.out.println("DEBUG FROMPOSITION: " + fromPosition);
         System.out.println("DEBUG TOPOSITION: " + toPosition);
 
+        System.out.println("DEBUG IN ONROWMOVED: ");
+        for(int i = 0;i < songs.size(); i++)
+        {
+            System.out.println(songs.get(i).name);
+        }
+
         MusicPlayer.getInstance().notifySwap(fromPosition, toPosition);
     }
 
