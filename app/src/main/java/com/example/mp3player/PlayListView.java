@@ -4,11 +4,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyCallback;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -26,8 +29,7 @@ import java.util.ArrayList;
 
 public class PlayListView extends AppCompatActivity {
 
-    private AudioManager audioManager;
-    private AudioFocusRequest audioFocusRequest;
+
 
     private static int playList_ix;
     private ActivityResultLauncher<Intent> edit_launcher;
@@ -41,10 +43,13 @@ public class PlayListView extends AppCompatActivity {
 
     private RecyclerView songList;
     private SongAdapter listAdapter;
-    AudioManager.OnAudioFocusChangeListener focusChangeListener;
+    private AudioManager audioManager;
+    private AudioFocusRequest audioFocusRequest;
 
     private final Handler progressHandler = new Handler();
     private ArrayList<Song> playList;
+
+    private AudioManager.OnAudioFocusChangeListener focusChangeListener;
 
     @Override
     public void onBackPressed() {
@@ -64,6 +69,22 @@ public class PlayListView extends AppCompatActivity {
 
         finish();
     }
+
+//    @Override
+//    protected void onPause()
+//    {
+//        super.onPause();
+//        MusicPlayer.getInstance().pause(true);
+//    }
+//
+//    @Override
+//    protected void onResume()
+//    {
+//        super.onResume();
+//
+//        if(MusicPlayer.getInstance().getState() == State.INTERRUPTED)
+//            MusicPlayer.getInstance().resume();
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +114,33 @@ public class PlayListView extends AppCompatActivity {
         //creates and attaches the adapter that the recyclerView
         createAdapter();
 
+        focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int i) {
+                switch(i)
+                {
+                    case AudioManager.AUDIOFOCUS_GAIN:
+//                        if(MusicPlayer.getInstance().getState() == State.INTERRUPTED)
+//                            MusicPlayer.getInstance().resume();
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                    case AudioManager.AUDIOFOCUS_LOSS:
+                        System.out.println("AUDIO FOCUS LOSS");
+                        MusicPlayer.getInstance().pause(true);
+                        notifyStateChange();
+                        break;
+                }
+            }
+        };
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            TelephonyCallback.CallStateListener listener = new TelephonyCallback.CallStateListener() {
+                @Override
+                public void onCallStateChanged(int i) {
+
+                }
+            };
+        }
 
         receiver = new MusicIntentReceiver();
         edit_launcher = registerForActivityResult(
@@ -109,12 +156,15 @@ public class PlayListView extends AppCompatActivity {
                 }
         );
 
-        //Code to be executed continuously int the background on another thread
+        //Code to be executed continuously in the background on another thread
         PlayListView.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 if(MusicPlayer.getInstance().getState() != State.INIT &&
                         MusicPlayer.getInstance().getState() != State.INTERRUPTED) {
+
+
+                    System.out.println(MusicPlayer.getInstance().getCurrentTime());
 
                     if(changeState)
                     {
@@ -141,6 +191,8 @@ public class PlayListView extends AppCompatActivity {
                 }
             }
         });
+
+
 
         //listeners for the seekbar that represents the progress in a song
         progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -251,9 +303,12 @@ public class PlayListView extends AppCompatActivity {
     {
         MusicPlayer.getInstance().shuffle();
 
-        if (MusicPlayer.getInstance().getPreviousState() == State.IDLE) {
-            notifyStateChange();
-        }
+        listAdapter.notifyDataSetChanged();
+        notifyStateChange();
+
+//        if (MusicPlayer.getInstance().getPreviousState() == State.IDLE) {
+//            notifyStateChange();
+//        }
 //        else{
 //            listAdapter.notifyDataSetChanged();
 //        }
@@ -300,8 +355,11 @@ public class PlayListView extends AppCompatActivity {
         //if the MusicPlayer is paused
         else if(MusicPlayer.getInstance().getState() == State.PAUSED)
         {
-            MusicPlayer.getInstance().resume();
-            notifyStateChange();
+            //request AudioFocus first
+            if(requestFocus() == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                MusicPlayer.getInstance().resume();
+                notifyStateChange();
+            }
         }
         else if(MusicPlayer.getInstance().getState() == State.IDLE)
         {
@@ -310,23 +368,25 @@ public class PlayListView extends AppCompatActivity {
         }
     }
 
-//    private int requestFocus()
-//    {
-//        audioManager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
-//        AudioAttributes playbackAttributes = new AudioAttributes.Builder()
-//                .setUsage(AudioAttributes.USAGE_MEDIA)
-//                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-//                .build();
-//
-//
-//        audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-//                .setAudioAttributes(playbackAttributes)
-//                .setAcceptsDelayedFocusGain(true)
-//                .setOnAudioFocusChangeListener(focusChangeListener)
-//                .build();
-//
-//        return audioManager.requestAudioFocus(audioFocusRequest);
-//    }
+    private int requestFocus()
+    {
+
+
+        audioManager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+        AudioAttributes playbackAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+
+
+        audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(playbackAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener(focusChangeListener)
+                .build();
+
+        return audioManager.requestAudioFocus(audioFocusRequest);
+    }
 
     private class MusicIntentReceiver extends BroadcastReceiver {
 

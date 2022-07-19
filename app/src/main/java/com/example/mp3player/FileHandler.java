@@ -106,6 +106,7 @@ public class FileHandler {
         return true;
     }
 
+    //writes the entire list_of_playlists arraylist to storage as a JSON file
     public void writeToJSON(ArrayList<PlayList> list_of_playLists) {
         String dataPath = root + File.separator + DATA_FOLDER_NAME;
 

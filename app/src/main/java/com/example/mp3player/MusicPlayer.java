@@ -1,5 +1,7 @@
 package com.example.mp3player;
 
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
 import android.media.MediaPlayer;
 import android.media.AudioManager;
 
@@ -18,7 +20,7 @@ public class MusicPlayer {
     private int song_ix;
     private static MusicPlayer instance = new MusicPlayer();
 
-    private AudioManager audioManager;
+
 
     private MusicPlayer()
     {
@@ -26,6 +28,13 @@ public class MusicPlayer {
         state = State.INIT;
         previousState = null;
         player = new MediaPlayer();
+
+        AudioAttributes attributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+
+        player.setAudioAttributes(attributes);
     }
 
     public void loadPlayList(ArrayList<Song> list) {
@@ -77,6 +86,14 @@ public class MusicPlayer {
         });
     }
 
+    public void pause(boolean interrupted) {
+        if (interrupted) {
+            changeState(State.INTERRUPTED);
+        }
+
+        pause();
+    }
+
     public void pause()
     {
         if (state == State.PLAYING)
@@ -89,7 +106,7 @@ public class MusicPlayer {
 
     public void resume()
     {
-        if(state == State.PAUSED)
+        if(state == State.PAUSED || state == State.INTERRUPTED)
         {
             player.start();
             //state = State.PLAYING;
@@ -172,16 +189,15 @@ public class MusicPlayer {
         if(state == State.INIT || state == State.IDLE)
             return;
 
+        //DON'T change song_ix here, let playSong change song_ix
         if(song_ix <= 0)
         {
-            song_ix = playList.size() - 1;
+            playSong(playList.size() - 1);
         }
         else
         {
-            song_ix--;
+            playSong(song_ix - 1);
         }
-
-        playSong(song_ix);
     }
 
     public void shuffle()

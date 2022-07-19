@@ -74,11 +74,13 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         }
 
         MusicPlayer.getInstance().notifySwap(fromPosition, toPosition);
+
+
     }
 
     @Override
     public void onRowSelected(SongViewHolder myViewHolder) {
-        myViewHolder.mainLayout.setBackgroundColor(Color.GRAY);
+        myViewHolder.mainLayout.setBackgroundColor(Color.BLUE);
     }
 
     @Override
