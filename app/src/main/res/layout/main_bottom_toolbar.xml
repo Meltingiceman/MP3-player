@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/purple_200">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp">
+
+        <ImageButton
+            android:id="@+id/main_trash_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/trash_can"
+            />
+
+        <ImageButton
+            android:id="@+id/main_shuffle_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/shuffle_icon"
+            android:layout_toRightOf="@id/main_trash_btn"/>
+
+        <ImageButton
+            android:id="@+id/main_play_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/play_icon"
+            android:layout_toRightOf="@+id/main_shuffle_btn"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>

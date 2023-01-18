@@ -70,21 +70,56 @@ public class PlayListView extends AppCompatActivity {
         finish();
     }
 
-//    @Override
-//    protected void onPause()
-//    {
-//        super.onPause();
-//        MusicPlayer.getInstance().pause(true);
-//    }
-//
-//    @Override
-//    protected void onResume()
-//    {
-//        super.onResume();
-//
-//        if(MusicPlayer.getInstance().getState() == State.INTERRUPTED)
-//            MusicPlayer.getInstance().resume();
-//    }
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        MusicPlayer.getInstance().pause(true);
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        if(MusicPlayer.getInstance().getState() == State.INTERRUPTED)
+            MusicPlayer.getInstance().resume();
+
+        PlayListView.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(MusicPlayer.getInstance().getState() != State.INIT &&
+                        MusicPlayer.getInstance().getState() != State.INTERRUPTED) {
+
+
+                    System.out.println(MusicPlayer.getInstance().getCurrentTime());
+
+                    if(changeState)
+                    {
+                        changeState = false;
+                        notifyStateChange();
+                    }
+
+                    int mCurrentPos = MusicPlayer.getInstance().getCurrentTime() / 1000;
+                    progressBar.setProgress(mCurrentPos);
+
+                    if (MusicPlayer.getInstance().getState() == State.IDLE) {
+
+                        time.setText("--:--/--:--");
+                    } else {
+                        String timer = convertTime(MusicPlayer.getInstance().getCurrentTime()) + "/" +
+                                convertTime(MusicPlayer.getInstance().getSongMax());
+                        time.setText(timer);
+                    }
+
+                    progressHandler.postDelayed(this, 1000);
+
+                    //Don't really know why this is needed but without this items in the recyclerview disappear
+                    //listAdapter.notifyDataSetChanged();
+                }
+            }
+        });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +156,8 @@ public class PlayListView extends AppCompatActivity {
                 {
                     case AudioManager.AUDIOFOCUS_GAIN:
 //                        if(MusicPlayer.getInstance().getState() == State.INTERRUPTED)
-//                            MusicPlayer.getInstance().resume();
+                        System.out.println("DEBUG: AUDIO FOCUS GAIN");
+                        MusicPlayer.getInstance().resume();
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                     case AudioManager.AUDIOFOCUS_LOSS:
