@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -75,6 +76,9 @@ public class MainActivity extends AppCompatActivity
             e.printStackTrace();
         }
 
+        //initialize the buttons on the UI
+        initButtons();
+
         //display the musicList
         displayList();
 
@@ -110,6 +114,7 @@ public class MainActivity extends AppCompatActivity
         );
 
         //Result action for clicking a playList.
+        //TODO: need to re do (or completely delete) this so it works with the new UI
         playListClick_launcher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
@@ -159,7 +164,33 @@ public class MainActivity extends AppCompatActivity
 
         DialogFragment newFragment = new AddSongDialogFragment();
         newFragment.show(getSupportFragmentManager(), "add_playlist");
+    }
 
+    public void initButtons()
+    {
+        //select all button
+        View selectAllBtn = findViewById(R.id.select_all_btn);
+        selectAllBtn.setOnClickListener((View v) -> {
+
+        });
+
+        //trash button
+        View trashBtn = findViewById(R.id.main_trash_btn);
+        trashBtn.setOnClickListener((View v) -> {
+
+        });
+
+        //shuffle button
+        View shuffleBtn = findViewById(R.id.main_shuffle_btn);
+        shuffleBtn.setOnClickListener((View v) -> {
+
+        });
+
+        //play button
+        View playButton = findViewById(R.id.main_play_btn);
+        playButton.setOnClickListener((View v) -> {
+
+        });
 
     }
 
@@ -202,17 +233,19 @@ public class MainActivity extends AppCompatActivity
 
         PlayListAdapter arrayAdapter = new PlayListAdapter(this, R.layout.playlist_button, list_of_playLists);
 
+        System.out.println("The item is: " + arrayAdapter.getItem(0));
         view.setAdapter(arrayAdapter);
-        Intent intent = new Intent(this, PlayListView.class);
 
+        //set the listener for each item in the list
         view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                Toast.makeText(getApplicationContext(), "Item " + i + " Pressed.", Toast.LENGTH_LONG).show();
 
-                intent.putExtra("PlayListIndex", i);
-                playListClick_launcher.launch(intent);
+                //get the View for the checkbox
+                CheckBox checkBox = (CheckBox) view.findViewById(R.id.playList_checkbox);
 
+                //if the checkbox is checked then uncheck it otherwise check it
+                checkBox.setChecked(!checkBox.isChecked());
             }
         });
     }
@@ -331,7 +364,14 @@ public class MainActivity extends AppCompatActivity
             holder.itemAmount.setText(Integer.toString(amount) + " item(s)");
 
             ImageButton deleteBtn = row.findViewById(R.id.delete_playlist_btn);
+
+            //onclick listener for the delete button on the a playlist item
+            /*
+                TODO:This needs to be removed and instead of having a delete button should have
+                an options button (three vertical dots)
+            */
             deleteBtn.setOnClickListener(new View.OnClickListener() {
+
                 @Override
                 public void onClick(View view) {
                     list_of_playLists.remove(position);
@@ -345,6 +385,8 @@ public class MainActivity extends AppCompatActivity
 
             return row;
         }
+
+        //TODO: make a way to get the indexes of the checked items
 
         private class PlayListHolder
         {

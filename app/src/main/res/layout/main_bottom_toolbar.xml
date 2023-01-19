@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/purple_200">
+    android:background="@color/main_sub_header_color">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -11,24 +11,28 @@
 
         <ImageButton
             android:id="@+id/main_trash_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/trash_can"
-            />
+            android:layout_width="114dp"
+            android:layout_height="54dp"
+            android:backgroundTint="@color/main_btn_color"
+            android:src="@drawable/trash_can" />
 
         <ImageButton
             android:id="@+id/main_shuffle_btn"
-            android:layout_width="wrap_content"
+            android:layout_width="114dp"
             android:layout_height="wrap_content"
-            android:src="@drawable/shuffle_icon"
-            android:layout_toRightOf="@id/main_trash_btn"/>
+            android:layout_marginLeft="25dp"
+            android:layout_toRightOf="@id/main_trash_btn"
+            android:backgroundTint="@color/main_btn_color"
+            android:src="@drawable/shuffle_icon" />
 
         <ImageButton
             android:id="@+id/main_play_btn"
-            android:layout_width="wrap_content"
+            android:layout_width="114dp"
             android:layout_height="wrap_content"
-            android:src="@drawable/play_icon"
-            android:layout_toRightOf="@+id/main_shuffle_btn"/>
+            android:layout_marginLeft="25dp"
+            android:layout_toRightOf="@+id/main_shuffle_btn"
+            android:backgroundTint="@color/main_btn_color"
+            android:src="@drawable/play_icon" />
 
     </RelativeLayout>
 

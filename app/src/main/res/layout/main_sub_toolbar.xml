@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@android:color/holo_red_light">
+    android:background="@color/main_sub_header_color">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -22,7 +22,8 @@
             android:layout_height="40dp"
             android:layout_marginRight="13dp"
             android:layout_toLeftOf="@id/add_playList_button"
-            android:src="@drawable/select_all" />
+            android:backgroundTint="@color/main_btn_color"
+            android:src="@drawable/select_all_white" />
 
         <ImageButton
             android:id="@+id/add_playList_button"
@@ -30,8 +31,9 @@
             android:layout_height="40dp"
             android:layout_alignParentRight="true"
             android:layout_marginRight="11dp"
-
-            android:src="@drawable/add_cross" />
+            android:backgroundTint="@color/main_btn_color"
+            android:src="@drawable/add_cross"
+            android:onClick="add_playList_btnClick"/>
 
     </RelativeLayout>
 
