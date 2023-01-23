@@ -20,9 +20,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
+            android:checked="false"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:checked="false"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/name"
@@ -53,7 +53,7 @@
             app:layout_constraintTop_toBottomOf="@+id/name" />
 
         <ImageButton
-            android:id="@+id/delete_playlist_btn"
+            android:id="@+id/playList_settings_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
@@ -62,7 +62,7 @@
             android:backgroundTint="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/trash_can" />
+            app:srcCompat="@drawable/three_vertical_dots" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

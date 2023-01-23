@@ -127,8 +127,9 @@ public class PlayListView extends AppCompatActivity {
         setContentView(R.layout.activity_play_list_view);
         changeState = false;
         Intent intent = getIntent();
+
         playList_ix = intent.getIntExtra("PlayListIndex", -1);
-        playList = MainActivity.list_of_playLists.get(playList_ix).songList;
+        playList = getPlayList();
 
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
@@ -144,7 +145,7 @@ public class PlayListView extends AppCompatActivity {
         MusicPlayer.getInstance().loadPlayList(playList);
         MusicPlayer.getInstance().setOnCompletionListener(mediaPlayer -> notifyStateChange());
 
-        playListName.setText(MainActivity.list_of_playLists.get(playList_ix).playListName);
+        playListName.setText("PlayList");
 
         //creates and attaches the adapter that the recyclerView
         createAdapter();
@@ -185,7 +186,6 @@ public class PlayListView extends AppCompatActivity {
                     ArrayList<PlayList> list_of_playLists = MainActivity.list_of_playLists;
                     System.out.println("Name back from activity: " + list_of_playLists.get(playList_ix).playListName);
 
-                    playListName.setText(list_of_playLists.get(playList_ix).playListName);
                     //numSongs.setText(Integer.toString(playList.size())  + " song(s) in playlist");
                     //mediaPlayer.reset();
 
@@ -285,6 +285,34 @@ public class PlayListView extends AppCompatActivity {
         res += seconds;
 
         return res;
+    }
+
+    private ArrayList<Song> getPlayList()
+    {
+        //get the indexes of the selected playlist(s)
+        Intent intent = getIntent();
+        String strIndexes = intent.getStringExtra("Indexes");
+
+        //parse and convert the indexes to ints
+        String[] strArrIx = strIndexes.split(",");
+        int[] indexes = new int[strArrIx.length];
+
+        //store them in an array
+        for(int i = 0; i < indexes.length; i++)
+        {
+            indexes[i] = Integer.parseInt(strArrIx[i]);
+        }
+
+        //combined playlist
+        ArrayList<Song> songs = new ArrayList<Song>();
+
+        for(int i = 0; i < indexes.length; i++)
+        {
+            //add the songs from the playlist to the combined playlist
+            songs.addAll(MainActivity.list_of_playLists.get(indexes[i]).songList);
+        }
+
+        return songs;
     }
 
     protected void createAdapter()

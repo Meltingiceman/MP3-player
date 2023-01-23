@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity
     public static ArrayList<PlayList> list_of_playLists;
     public static FileHandler handler;
     private ActivityResultLauncher<Intent> add_btn_launcher;
+
     private ActivityResultLauncher<Intent> playListClick_launcher;
 
     public static final String DATA_FILE_NAME = "data.json";
@@ -125,12 +126,13 @@ public class MainActivity extends AppCompatActivity
                         //NEED TO THINK OF OTHER THINGS TO DO HERE (IF ANY)
 
 
-                        //write to JSON to write any changed to the list of playlists
+                        //write any changes in the playlists to the JSON
                         handler.writeToJSON(list_of_playLists);
                         displayList();
                     }
                 }
         });
+
 
 
     }
@@ -190,6 +192,23 @@ public class MainActivity extends AppCompatActivity
         View playButton = findViewById(R.id.main_play_btn);
         playButton.setOnClickListener((View v) -> {
 
+            String indexes = "";
+            for(int i = 0; i < list_of_playLists.size(); i++)
+            {
+                if(list_of_playLists.get(i).checked)
+                {
+                    indexes += (i + ",");
+                }
+            }
+
+            if(indexes.length() > 0)
+            {
+                Intent intent = new Intent(this, PlayListView.class);
+                intent.putExtra("Indexes", indexes);
+
+                playListClick_launcher.launch(intent);
+            }
+
         });
 
     }
@@ -246,6 +265,8 @@ public class MainActivity extends AppCompatActivity
 
                 //if the checkbox is checked then uncheck it otherwise check it
                 checkBox.setChecked(!checkBox.isChecked());
+
+                list_of_playLists.get(i).checked = checkBox.isChecked();
             }
         });
     }
@@ -269,7 +290,7 @@ public class MainActivity extends AppCompatActivity
         /*A work around method to get the menu to function correctly.
             Basically overrides the itemClick listener of the PopupMenu that's created in this method
             to call the OnOptionsItemSelected method.*/
-        popup.setOnMenuItemClickListener(menuItem -> onOptionsItemSelected(menuItem));
+        popup.setOnMenuItemClickListener(this::onOptionsItemSelected);
 
         popup.show();
     }
@@ -320,7 +341,7 @@ public class MainActivity extends AppCompatActivity
         displayList();
     }
 
-    private class PlayListAdapter extends ArrayAdapter<PlayList>
+    private static class PlayListAdapter extends ArrayAdapter<PlayList>
     {
         Context context;
         int layoutResourceId;
@@ -363,27 +384,52 @@ public class MainActivity extends AppCompatActivity
             holder.playListName.setText(item.playListName);
             holder.itemAmount.setText(Integer.toString(amount) + " item(s)");
 
-            ImageButton deleteBtn = row.findViewById(R.id.delete_playlist_btn);
+            ImageButton playlist_settings = row.findViewById(R.id.playList_settings_btn);
 
-            //onclick listener for the delete button on the a playlist item
-            /*
-                TODO:This needs to be removed and instead of having a delete button should have
-                an options button (three vertical dots)
-            */
-            deleteBtn.setOnClickListener(new View.OnClickListener() {
-
+            playlist_settings.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    list_of_playLists.remove(position);
-                    handler.writeToJSON(list_of_playLists);
-                    displayList();
-//                    Toast.makeText(getApplicationContext(), "Delete pressed!", Toast.LENGTH_LONG).show();
-
-
+                    showPopupMenu(view, position);
                 }
             });
 
             return row;
+        }
+
+        //display the popup menu for each item
+        private void showPopupMenu(View view, int pos)
+        {
+            PopupMenu popupMenu = new PopupMenu(view.getContext(), view);
+            popupMenu.inflate(R.menu.playlist_button_menu);
+
+            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem menuItem) {
+                    return PlayListAdapter.this.onMenuItemClick(menuItem, pos);
+                }
+            });
+
+            popupMenu.show();
+        }
+
+        public boolean onMenuItemClick(MenuItem item, int pos)
+        {
+
+            if(item.getItemId() == R.id.playlist_popup_edit)
+            {
+                //TODO: Start the edit playlist activity
+                Intent intent = new Intent(context, Edit_Playlist.class);
+                intent.putExtra("playlist_index", pos);
+
+
+                return true;
+            }
+            else if(item.getItemId() == R.id.playlist_popup_delete)
+            {
+                //TODO: delete playlist functionality goes here
+                return true;
+            }
+            return false;
         }
 
         //TODO: make a way to get the indexes of the checked items
@@ -400,6 +446,7 @@ class PlayList
 {
     public String playListName;
     public ArrayList<Song> songList;
+    public boolean checked = false;
 
     public PlayList()
     {
