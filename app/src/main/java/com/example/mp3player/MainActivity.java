@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity
 
         try {
             list_of_playLists = handler.loadPlayLists();
+            list_of_playLists.sort(PlaylistComparator.getInstance());
         } catch (JSONException e) {
             Toast.makeText(getApplicationContext(), "Failed to load JSON data.", Toast.LENGTH_LONG).show();
             e.printStackTrace();
@@ -89,10 +91,10 @@ public class MainActivity extends AppCompatActivity
 
         //DEBUG
         //displays the list of playlists
-        for(int i = 0; i < list_of_playLists.size(); i++)
-        {
-            System.out.println("DEBUG: " + list_of_playLists.get(i).playListName);
-        }
+//        for(int i = 0; i < list_of_playLists.size(); i++)
+//        {
+//            System.out.println("DEBUG: " + list_of_playLists.get(i).playListName);
+//        }
 
         //create the ActivityResultLauncher(s)
 
@@ -112,6 +114,7 @@ public class MainActivity extends AppCompatActivity
                         list_of_playLists.add(pList);
 
                         handler.writeToJSON(list_of_playLists);
+
                         displayList();
                     }
                 }
@@ -265,6 +268,9 @@ public class MainActivity extends AppCompatActivity
             PlayList playList = new PlayList();
             playList.playListName = name;
             list_of_playLists.add(playList);
+
+            list_of_playLists.sort(PlaylistComparator.getInstance());
+
             handler.writeToJSON(list_of_playLists);
             displayList();
         }
@@ -304,7 +310,6 @@ public class MainActivity extends AppCompatActivity
 
         arrayAdapter = new PlayListAdapter(this, R.layout.playlist_button, displayList);
 
-        System.out.println("The item is: " + arrayAdapter.getItem(0));
         view.setAdapter(arrayAdapter);
 
     }
@@ -394,6 +399,7 @@ public class MainActivity extends AppCompatActivity
             layoutResourceId = resource;
             data = (ArrayList) list;
             checked = new ArrayList<>();
+
         }
 
         @NonNull
@@ -401,9 +407,6 @@ public class MainActivity extends AppCompatActivity
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
             PlayListHolder holder = null;
             View row = convertView;
-            TextView textViewName;
-            TextView textViewAmt;
-            CheckBox itemCheckBox;
 
             //if the row has not been made yet then inflate
             if(row == null)
@@ -547,6 +550,27 @@ class PlayList
     public String toString()
     {
         return playListName;
+    }
+}
+
+class PlaylistComparator implements Comparator<PlayList>
+{
+    //TODO: Let the user have more complex ways to sort via settings?
+
+    private static PlaylistComparator comparator = new PlaylistComparator();
+    private PlaylistComparator()
+    {
+        //might add some things here
+    }
+
+    public int compare(PlayList p1, PlayList p2)
+    {
+        return p1.playListName.compareTo(p2.playListName);
+    }
+
+    public static PlaylistComparator getInstance()
+    {
+        return comparator;
     }
 }
 
