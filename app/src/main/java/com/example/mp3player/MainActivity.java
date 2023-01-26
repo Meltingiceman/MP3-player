@@ -7,14 +7,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -37,7 +35,6 @@ import androidx.fragment.app.DialogFragment;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -139,9 +136,6 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
         });
-
-
-
     }
 
     protected boolean initializeJson(String pathName)
@@ -184,30 +178,17 @@ public class MainActivity extends AppCompatActivity
         search.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.d("STATE", "Before text changed");
+
             }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.d("TEXTSTATE", "on text changed");
-                System.out.println("on text Changed");
                 filterDisplayList(charSequence.toString().toLowerCase());
-//                String searchText = charSequence.toString().toLowerCase();
-//
-//                displayList.clear();
-//                displayList.addAll(list_of_playLists);
-//
-//                displayList.removeIf(playlist ->
-//                        searchText.length() > 0 && !playlist.playListName.toLowerCase().contains(searchText));
-//
-//                arrayAdapter.notifyDataSetChanged();
 
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
-                Log.d("STATE", "After text changed");
-
 
             }
         });
@@ -261,6 +242,7 @@ public class MainActivity extends AppCompatActivity
     public void filterDisplayList(String searchText)
     {
 
+        //add all the items to the displayList then remove items that the user isn't looking for
         displayList.clear();
         displayList.addAll(list_of_playLists);
 
@@ -325,22 +307,6 @@ public class MainActivity extends AppCompatActivity
         System.out.println("The item is: " + arrayAdapter.getItem(0));
         view.setAdapter(arrayAdapter);
 
-
-
-        //set the listener for each item in the list
-//        view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//
-//                //get the View for the checkbox
-//                CheckBox checkBox = (CheckBox) view.findViewById(R.id.playList_checkbox);
-//
-//                //if the checkbox is checked then uncheck it otherwise check it
-//                checkBox.setChecked(!checkBox.isChecked());
-//
-//                list_of_playLists.get(i).checked = checkBox.isChecked();
-//            }
-//        });
     }
 
     @Override
@@ -420,8 +386,6 @@ public class MainActivity extends AppCompatActivity
         ArrayList<PlayList> data = null;
         private static ArrayList<String> checked;
 
-
-
         public PlayListAdapter(Context context, int resource, List<PlayList> list)
         {
             super(context, resource, list);
@@ -440,10 +404,10 @@ public class MainActivity extends AppCompatActivity
             TextView textViewName;
             TextView textViewAmt;
             CheckBox itemCheckBox;
-            String plName = null;
 
-//            if(row == null)
-//            {
+            //if the row has not been made yet then inflate
+            if(row == null)
+            {
                     LayoutInflater inflater = ((Activity)context).getLayoutInflater();
                     row = inflater.inflate(layoutResourceId, parent, false);
 
@@ -452,25 +416,23 @@ public class MainActivity extends AppCompatActivity
                     holder.itemAmount = row.findViewById(R.id.itemCount);
                     holder.playListCheck = row.findViewById(R.id.playList_checkbox);
 
-//                row.setTag(holder);
-//            }
-//            else
-//            {
-//                Log.d("ARRAYADAPTER", "Reusing display?");
-//                holder = (PlayListHolder) row.getTag();
-//
-//
-//            }
+                row.setTag(holder);
+            }
+            else //reuse the row if it has already been made
+            {
+                holder = (PlayListHolder) row.getTag();
+            }
 
+            //set the name and song amount
             PlayList item = data.get(position);
             int amount = item.songList.size();
 
             holder.playListName.setText(item.playListName);
-            holder.itemAmount.setText(Integer.toString(amount) + " item(s)");
-            plName = holder.playListName.getText().toString();
+            holder.itemAmount.setText(amount + " item(s)");
 
+            //click listener for the 3 vertical dots on the menu option
+            //note: this will not trigger the row's click listener
             ImageButton playlist_settings = row.findViewById(R.id.playList_settings_btn);
-
             playlist_settings.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -478,6 +440,7 @@ public class MainActivity extends AppCompatActivity
                 }
             });
 
+            //click listener for the remainder of the playlist button
             row.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -490,9 +453,15 @@ public class MainActivity extends AppCompatActivity
                 }
             });
 
+            //check the checkbox if this item was checked by something earlier
+            /*
+            *    note: the order of these next 3 statements makes it such that the listener defined below
+            *    will not be executed if the checkmark is checked here.
+            * */
             holder.playListCheck.setOnCheckedChangeListener(null);
             holder.playListCheck.setChecked(checked.contains(holder.playListName.getText().toString()));
 
+            //code that gets executed each time something is checked. (except if done on line above)
             PlayListHolder finalHolder = holder;
             holder.playListCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -504,13 +473,10 @@ public class MainActivity extends AppCompatActivity
                 }
             });
 
-            Log.d("ARRAYADAPTER", position + " is " + plName);
-            Log.d("ARRAYADAPTER", plName + ": " + checked.contains(plName));
-
             return row;
         }
 
-        //display the popup menu for each item
+        //displays the popup menu (used when clicking the 3 certical dots)
         private void showPopupMenu(View view, int pos)
         {
             PopupMenu popupMenu = new PopupMenu(view.getContext(), view);
@@ -526,15 +492,18 @@ public class MainActivity extends AppCompatActivity
             popupMenu.show();
         }
 
+        //method used when an option is clicked in the popup menu
+        /*
+        *   @param item The menu option that was clicked
+        *   @param pos The position of the playlist button whose menu was clicked
+        */
         public boolean onMenuItemClick(MenuItem item, int pos)
         {
-
             if(item.getItemId() == R.id.playlist_popup_edit)
             {
                 //TODO: Start the edit playlist activity
                 Intent intent = new Intent(context, Edit_Playlist.class);
                 intent.putExtra("playlist_index", pos);
-
 
                 return true;
             }
@@ -546,9 +515,11 @@ public class MainActivity extends AppCompatActivity
             return false;
         }
 
+        //clears all the checks
         public static void clearChecked()
         {
             checked.clear();
+            //TODO: this needs to do more than just clear the list of checked stuff
         }
 
         //TODO: make a way to get the indexes of the checked items
