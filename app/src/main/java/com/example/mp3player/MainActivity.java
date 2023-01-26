@@ -5,6 +5,9 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -14,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -33,6 +37,7 @@ import androidx.fragment.app.DialogFragment;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -46,9 +51,11 @@ public class MainActivity extends AppCompatActivity
     public static final String playListName_key = "PLAYLIST_ADD";
     public static final String playListRoute_key = "PLAYLIST_ROUTE";
     public static ArrayList<PlayList> list_of_playLists;
+    public static ArrayList<PlayList> displayList;
     public static FileHandler handler;
-    private ActivityResultLauncher<Intent> add_btn_launcher;
 
+    private PlayListAdapter arrayAdapter;
+    private ActivityResultLauncher<Intent> add_btn_launcher;
     private ActivityResultLauncher<Intent> playListClick_launcher;
 
     public static final String DATA_FILE_NAME = "data.json";
@@ -77,10 +84,10 @@ public class MainActivity extends AppCompatActivity
             e.printStackTrace();
         }
 
-        //initialize the buttons on the UI
-        initButtons();
+        //initialize the components on the UI
+        initComponents();
 
-        //display the musicList
+        //create and display the musicList
         displayList();
 
         //DEBUG
@@ -168,6 +175,44 @@ public class MainActivity extends AppCompatActivity
         newFragment.show(getSupportFragmentManager(), "add_playlist");
     }
 
+    public void initComponents()
+    {
+        //Initialize the buttons on the main UI
+        initButtons();
+
+        EditText search = findViewById(R.id.main_search_bar);
+        search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Log.d("STATE", "Before text changed");
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Log.d("TEXTSTATE", "on text changed");
+                System.out.println("on text Changed");
+                filterDisplayList(charSequence.toString().toLowerCase());
+//                String searchText = charSequence.toString().toLowerCase();
+//
+//                displayList.clear();
+//                displayList.addAll(list_of_playLists);
+//
+//                displayList.removeIf(playlist ->
+//                        searchText.length() > 0 && !playlist.playListName.toLowerCase().contains(searchText));
+//
+//                arrayAdapter.notifyDataSetChanged();
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                Log.d("STATE", "After text changed");
+
+
+            }
+        });
+    }
+
     public void initButtons()
     {
         //select all button
@@ -213,6 +258,18 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    public void filterDisplayList(String searchText)
+    {
+
+        displayList.clear();
+        displayList.addAll(list_of_playLists);
+
+        displayList.removeIf(playlist ->
+                searchText.length() > 0 && !playlist.playListName.toLowerCase().contains(searchText));
+
+        arrayAdapter.notifyDataSetChanged();
+    }
+
     @Override
     public void onDialogPositiveClick(DialogFragment dialog)
     {
@@ -250,25 +307,40 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        PlayListAdapter arrayAdapter = new PlayListAdapter(this, R.layout.playlist_button, list_of_playLists);
+        displayList = new ArrayList<>();
+
+        String searchText = ( (EditText)findViewById(R.id.main_search_bar) ).getText().toString();
+
+        displayList.addAll(list_of_playLists);
+
+        for (PlayList playList: list_of_playLists) {
+            if(searchText.length() != 0 && !playList.playListName.contains(searchText))
+            {
+                displayList.remove(playList);
+            }
+        }
+
+        arrayAdapter = new PlayListAdapter(this, R.layout.playlist_button, displayList);
 
         System.out.println("The item is: " + arrayAdapter.getItem(0));
         view.setAdapter(arrayAdapter);
 
+
+
         //set the listener for each item in the list
-        view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-                //get the View for the checkbox
-                CheckBox checkBox = (CheckBox) view.findViewById(R.id.playList_checkbox);
-
-                //if the checkbox is checked then uncheck it otherwise check it
-                checkBox.setChecked(!checkBox.isChecked());
-
-                list_of_playLists.get(i).checked = checkBox.isChecked();
-            }
-        });
+//        view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+//
+//                //get the View for the checkbox
+//                CheckBox checkBox = (CheckBox) view.findViewById(R.id.playList_checkbox);
+//
+//                //if the checkbox is checked then uncheck it otherwise check it
+//                checkBox.setChecked(!checkBox.isChecked());
+//
+//                list_of_playLists.get(i).checked = checkBox.isChecked();
+//            }
+//        });
     }
 
     @Override
@@ -346,6 +418,9 @@ public class MainActivity extends AppCompatActivity
         Context context;
         int layoutResourceId;
         ArrayList<PlayList> data = null;
+        private static ArrayList<String> checked;
+
+
 
         public PlayListAdapter(Context context, int resource, List<PlayList> list)
         {
@@ -354,6 +429,7 @@ public class MainActivity extends AppCompatActivity
             this.context = context;
             layoutResourceId = resource;
             data = (ArrayList) list;
+            checked = new ArrayList<>();
         }
 
         @NonNull
@@ -361,28 +437,37 @@ public class MainActivity extends AppCompatActivity
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
             PlayListHolder holder = null;
             View row = convertView;
-            if(row == null)
-            {
-                LayoutInflater inflater = ((Activity)context).getLayoutInflater();
-                row = inflater.inflate(layoutResourceId, parent, false);
+            TextView textViewName;
+            TextView textViewAmt;
+            CheckBox itemCheckBox;
+            String plName = null;
 
-                holder = new PlayListHolder();
-                holder.playListName = (TextView) row.findViewById(R.id.name);
-                holder.itemAmount = (TextView) row.findViewById(R.id.itemCount);
+//            if(row == null)
+//            {
+                    LayoutInflater inflater = ((Activity)context).getLayoutInflater();
+                    row = inflater.inflate(layoutResourceId, parent, false);
 
-                row.setTag(holder);
-            }
-            else
-            {
-                holder = (PlayListHolder) row.getTag();
-            }
+                    holder = new PlayListHolder();
+                    holder.playListName = row.findViewById(R.id.name);
+                    holder.itemAmount = row.findViewById(R.id.itemCount);
+                    holder.playListCheck = row.findViewById(R.id.playList_checkbox);
+
+//                row.setTag(holder);
+//            }
+//            else
+//            {
+//                Log.d("ARRAYADAPTER", "Reusing display?");
+//                holder = (PlayListHolder) row.getTag();
+//
+//
+//            }
 
             PlayList item = data.get(position);
             int amount = item.songList.size();
-            //System.out.println("IN ADAPTER: " + item.playListName);
 
             holder.playListName.setText(item.playListName);
             holder.itemAmount.setText(Integer.toString(amount) + " item(s)");
+            plName = holder.playListName.getText().toString();
 
             ImageButton playlist_settings = row.findViewById(R.id.playList_settings_btn);
 
@@ -392,6 +477,35 @@ public class MainActivity extends AppCompatActivity
                     showPopupMenu(view, position);
                 }
             });
+
+            row.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //get the View for the checkbox
+                    CheckBox checkBox = (CheckBox) view.findViewById(R.id.playList_checkbox);
+
+                    //if the checkbox is checked then uncheck it otherwise check it
+                    checkBox.setChecked(!checkBox.isChecked());
+
+                }
+            });
+
+            holder.playListCheck.setOnCheckedChangeListener(null);
+            holder.playListCheck.setChecked(checked.contains(holder.playListName.getText().toString()));
+
+            PlayListHolder finalHolder = holder;
+            holder.playListCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    if(b)
+                        checked.add(finalHolder.playListName.getText().toString());
+                    else
+                        checked.remove(finalHolder.playListName.getText().toString());
+                }
+            });
+
+            Log.d("ARRAYADAPTER", position + " is " + plName);
+            Log.d("ARRAYADAPTER", plName + ": " + checked.contains(plName));
 
             return row;
         }
@@ -432,12 +546,18 @@ public class MainActivity extends AppCompatActivity
             return false;
         }
 
+        public static void clearChecked()
+        {
+            checked.clear();
+        }
+
         //TODO: make a way to get the indexes of the checked items
 
         private class PlayListHolder
         {
             public TextView playListName;
             public TextView itemAmount;
+            public CheckBox playListCheck;
         }
     }
 }
