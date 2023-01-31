@@ -415,8 +415,8 @@ public class MainActivity extends AppCompatActivity
                     row = inflater.inflate(layoutResourceId, parent, false);
 
                     holder = new PlayListHolder();
-                    holder.playListName = row.findViewById(R.id.name);
-                    holder.itemAmount = row.findViewById(R.id.itemCount);
+                    holder.playListName = row.findViewById(R.id.edit_playlist_title);
+                    holder.itemAmount = row.findViewById(R.id.edit_playlist_subtitle);
                     holder.playListCheck = row.findViewById(R.id.playList_checkbox);
 
                 row.setTag(holder);

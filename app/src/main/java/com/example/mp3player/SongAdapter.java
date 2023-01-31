@@ -10,7 +10,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -96,7 +95,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         public SongViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            songName = itemView.findViewById(R.id.name);
+            songName = itemView.findViewById(R.id.edit_playlist_title);
             mainLayout = itemView.findViewById(R.id.SongRow);
         }
     }
