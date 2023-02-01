@@ -34,82 +34,39 @@ public class Edit_Playlist extends AppCompatActivity {
         setContentView(R.layout.activity_edit_playlist);
 
         Intent tmp = getIntent();
-        playList_ix = tmp.getIntExtra("playlist_index", -1);
+        boolean editing = tmp.getBooleanExtra("editing", false);
 
-        EditText name = findViewById(R.id.playListName);
-        PlayList playList;
-
-        if(playList_ix == -1)
+        if(editing)  //if editing an existing playlist
         {
-            name.setText("Could not find song");
-            playList = null;
+            String plName = tmp.getStringExtra("playlist_name");
+            playList_ix = searchPlaylist(plName);
+            fillDisplay(MainActivity.list_of_playLists.get(playList_ix));
         }
-        else
+        else        // creating a new playlist
         {
-            playList = MainActivity.list_of_playLists.get(playList_ix);
-            name.setText(playList.playListName);
+
         }
+    }
 
-        createAdapter();
-
-        ImageButton backBtn = (ImageButton) findViewById(R.id.back_btn);
-        backBtn.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v)
+    protected int searchPlaylist(String plName)
+    {
+        for(int i = 0; i < MainActivity.list_of_playLists.size(); i++)
+        {
+            if(MainActivity.list_of_playLists.get(i).playListName.equals(plName))
             {
-//                System.out.println("I want to go back now.");
-//                Toast.makeText(getApplicationContext(), "I want to go back now", Toast.LENGTH_LONG).show();
-                playList.playListName = name.getText().toString();
-                //MainActivity.handler.writeToJSON(MainActivity.list_of_playLists);
-                //copy any changes made to the music list (ListView) to the arrayList
-
-                finish();
+                return i;
             }
-        });
+        }
 
-        //setting up the launcher for the adding a new song activity
-        edit_launcher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        if(result.getResultCode() == RESULT_OK)
-                        {
-                            Intent data = result.getData();
+        return -1;
+    }
 
-                            Song addition = new Song();
-                            addition.name = data.getStringExtra("songName");
-                            addition.path = data.getStringExtra("songRoute");
+    public void fillDisplay(PlayList pl)
+    {
 
-                            //add the song to the playlist and write the changes to the JSON
-                            MainActivity.list_of_playLists.get(playList_ix).songList.add(addition);
-                            MainActivity.handler.writeToJSON(MainActivity.list_of_playLists);
-
-                            System.out.println("Playlist info");
-
-                            for(int i = 0; i < MainActivity.list_of_playLists.get(playList_ix).songList.size(); i++)
-                            {
-                                System.out.println("\t" + MainActivity.list_of_playLists.get(playList_ix).songList.get(i).name);
-                                System.out.println("\t" + MainActivity.list_of_playLists.get(playList_ix).songList.get(i).path);
-                            }
-
-                            //display the new changes to the list
-                            createAdapter();
-                        }
-                    }
-                }
-        );
-
-        permission_launcher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        Intent sendingIntent = new Intent(Edit_Playlist.this, Detailed_Song_View.class);
-                        sendingIntent.putExtra("editing", false);
-                        edit_launcher.launch(sendingIntent);
-                    }
-                }
-        );
+        EditText ed = findViewById(R.id.edit_playlist_playListName);
+        ed.setText(pl.playListName);
+        createAdapter();
     }
 
     protected void createAdapter()
@@ -226,39 +183,4 @@ public class Edit_Playlist extends AppCompatActivity {
         createAdapter();
 
     }
-
-//    private class EditSongAdapter extends SongAdapter
-//    {
-//        public EditSongAdapter(Context context, int resource, List<Song> list, int id)
-//        {
-//            super(context, resource, list, id);
-//        }
-//
-//        @NonNull
-//        @Override
-//        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-//            View result = super.getView(position, convertView, parent);
-//
-//            ImageButton trashCan = result.findViewById(R.id.delete_song_btn);
-//            ImageButton edit = result.findViewById(R.id.edit_sng_btn);
-//
-//            trashCan.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    //Toast.makeText(getApplicationContext(), "delete Click", Toast.LENGTH_SHORT).show();
-//                    deleteSong(position);
-//                }
-//            });
-//
-//            edit.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    //Toast.makeText(getApplicationContext(), "Edit Click", Toast.LENGTH_SHORT).show();
-//                    editSong(position);
-//                }
-//            });
-//
-//            return result;
-//        }
-//    }
 }

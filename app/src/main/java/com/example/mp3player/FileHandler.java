@@ -25,6 +25,7 @@ public class FileHandler {
     public static final String DATA_FOLDER_NAME = "appData";
     public static final String MUSIC_FOLDER_NAME = "music";
     private String root;
+    private ArrayList<PlayList> loadedPlaylist;
     File dataFolder;
     File dataFile;
     File settingsFile;

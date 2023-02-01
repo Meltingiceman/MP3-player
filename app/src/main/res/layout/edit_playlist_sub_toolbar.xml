@@ -32,8 +32,7 @@
             android:layout_alignParentRight="true"
             android:layout_marginRight="11dp"
             android:backgroundTint="@color/main_btn_color"
-            android:src="@drawable/add_cross"
-            android:onClick="add_playList_btnClick"/>
+            android:src="@drawable/add_cross" />
 
     </RelativeLayout>
 

@@ -19,9 +19,7 @@ public class MusicPlayer {
     private MediaPlayer player;
     private int song_ix;
     private static MusicPlayer instance = new MusicPlayer();
-
-
-
+    
     private MusicPlayer()
     {
         //MusicPlayer is being initialized

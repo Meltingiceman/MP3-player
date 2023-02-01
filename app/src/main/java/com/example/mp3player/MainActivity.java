@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity
     public static FileHandler handler;
 
     private PlayListAdapter arrayAdapter;
-    private ActivityResultLauncher<Intent> add_btn_launcher;
+    public ActivityResultLauncher<Intent> addEditLauncher;
     private ActivityResultLauncher<Intent> playListClick_launcher;
 
     public static final String DATA_FILE_NAME = "data.json";
@@ -68,18 +69,14 @@ public class MainActivity extends AppCompatActivity
         handler = new FileHandler(getFilesDir().toString());
         boolean success = handler.init();
 
-//        if(success)
-//            Toast.makeText(getApplicationContext(), "JSON created!", Toast.LENGTH_LONG).show();
-//        else
-//            Toast.makeText(getApplicationContext(), "JSON FAILED!", Toast.LENGTH_LONG).show();
 
         //load the playlist
-
         try {
             list_of_playLists = handler.loadPlayLists();
             list_of_playLists.sort(PlaylistComparator.getInstance());
         } catch (JSONException e) {
             Toast.makeText(getApplicationContext(), "Failed to load JSON data.", Toast.LENGTH_LONG).show();
+            list_of_playLists = new ArrayList<>();
             e.printStackTrace();
         }
 
@@ -89,17 +86,10 @@ public class MainActivity extends AppCompatActivity
         //create and display the musicList
         displayList();
 
-        //DEBUG
-        //displays the list of playlists
-//        for(int i = 0; i < list_of_playLists.size(); i++)
-//        {
-//            System.out.println("DEBUG: " + list_of_playLists.get(i).playListName);
-//        }
-
         //create the ActivityResultLauncher(s)
 
         //Result action of adding a new playlist
-        add_btn_launcher = registerForActivityResult(
+        addEditLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
                 @Override
@@ -138,38 +128,19 @@ public class MainActivity extends AppCompatActivity
                         displayList();
                     }
                 }
-        });
-    }
-
-    protected boolean initializeJson(String pathName)
-    {
-        JSONObject root = new JSONObject();
-        JSONArray musicList = new JSONArray();
-        try {
-            root.put("playLists", musicList);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        try {
-            FileWriter writer = new FileWriter(pathName + File.separator + DATA_FILE_NAME);
-            writer.write(root.toString());
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
+            }
+        );
     }
 
     //when the plus button is clicked
     public void add_playList_btnClick(View view)
     {
+        Intent intent = new Intent(this, Edit_Playlist.class);
+        intent.putExtra("editing", false);
 
-        DialogFragment newFragment = new AddSongDialogFragment();
-        newFragment.show(getSupportFragmentManager(), "add_playlist");
+
+//        DialogFragment newFragment = new AddSongDialogFragment();
+//        newFragment.show(getSupportFragmentManager(), "add_playlist");
     }
 
     public void initComponents()
@@ -330,9 +301,11 @@ public class MainActivity extends AppCompatActivity
         MenuInflater inflater = popup.getMenuInflater();
         inflater.inflate(R.menu.main_settings_menu, popup.getMenu());
 
-        /*A work around method to get the menu to function correctly.
+        /*
+            A work around method to get the menu to function correctly.
             Basically overrides the itemClick listener of the PopupMenu that's created in this method
-            to call the OnOptionsItemSelected method.*/
+            to call the OnOptionsItemSelected method.
+        */
         popup.setOnMenuItemClickListener(this::onOptionsItemSelected);
 
         popup.show();
@@ -384,12 +357,12 @@ public class MainActivity extends AppCompatActivity
         displayList();
     }
 
-    private static class PlayListAdapter extends ArrayAdapter<PlayList>
+    private class PlayListAdapter extends ArrayAdapter<PlayList>
     {
         Context context;
         int layoutResourceId;
         ArrayList<PlayList> data = null;
-        private static ArrayList<String> checked;
+        private ArrayList<String> checked;
 
         public PlayListAdapter(Context context, int resource, List<PlayList> list)
         {
@@ -506,7 +479,12 @@ public class MainActivity extends AppCompatActivity
             {
                 //TODO: Start the edit playlist activity
                 Intent intent = new Intent(context, Edit_Playlist.class);
-                intent.putExtra("playlist_index", pos);
+                intent.putExtra("playlist_name", data.get(pos).playListName);
+                intent.putExtra("editing", true);
+
+                addEditLauncher.launch(intent);
+
+                Log.d("EDIT", "Song picked was " + data.get(pos).playListName);
 
                 return true;
             }
@@ -519,7 +497,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         //clears all the checks
-        public static void clearChecked()
+        public void clearChecked()
         {
             checked.clear();
             //TODO: this needs to do more than just clear the list of checked stuff

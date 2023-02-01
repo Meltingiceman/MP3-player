@@ -47,20 +47,19 @@ public class AddSongDialogFragment extends DialogFragment
         View dialog_layout = inflater.inflate(R.layout.dialog_add_playlist, null);
 
         builder.setView(dialog_layout)
-                .setPositiveButton("Create playlist", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        listener.onDialogPositiveClick(AddSongDialogFragment.this);
+            .setPositiveButton("Create playlist", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    listener.onDialogPositiveClick(AddSongDialogFragment.this);
+                }
+            })
+            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    listener.onDialogNegativeClick(AddSongDialogFragment.this);
+                }
+            });
 
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        listener.onDialogNegativeClick(AddSongDialogFragment.this);
-//                        AddSongDialogFragment.this.getDialog().cancel();
-                    }
-                });
         return builder.create();
     }
 }

@@ -7,8 +7,6 @@
     tools:context=".Edit_Playlist"
     android:background="#3A3A3A">
 
-
-
     <include
         android:id="@+id/edit_playlist_toolbar"
         layout="@layout/edit_playlist_toolbar"
@@ -27,8 +25,17 @@
         android:id="@+id/edit_music_list"
         android:layout_width="match_parent"
         android:layout_height="668dp"
+        android:layout_above="@+id/edit_playlist_bottom_bar"
         android:layout_below="@+id/edit_playlist_sub_toolbar"
         android:layout_alignParentStart="true" />
+
+    <include
+        android:id="@+id/edit_playlist_bottom_bar"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        layout="@layout/edit_playlist_bottom_bar"
+        android:layout_alignParentBottom="true"
+        />
 
 <!--    <View-->
 <!--        android:id="@+id/divider"-->
