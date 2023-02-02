@@ -57,9 +57,7 @@ public class Detailed_Song_View extends AppCompatActivity {
         route = findViewById(R.id.File_URL);
         route.setText(download_route);
 
-//        deleteOption = findViewById(R.id.deleteBox);
         downloads_list = findViewById(R.id.downloads_view);
-//        folder_list = findViewById(R.id.music_folder_view);
 
         if (editing) {
             //get editing data
@@ -89,7 +87,6 @@ public class Detailed_Song_View extends AppCompatActivity {
     //when the user clicks the save button
     public void save_click(View view)
     {
-        System.out.println("dsfdsfds");
         EditText name = findViewById(R.id.songName);
         song_name = name.getText().toString();
         if(song_name.length() == 0 || song_selected == null)
@@ -102,30 +99,18 @@ public class Detailed_Song_View extends AppCompatActivity {
         result.putExtra("songName", song_name);
         Song addition = new Song();
         addition.name = song_name;
-
-//        if(delete && deleteOption.isChecked())
-//        {
-//            //move song file to music_folder data using FileHandler
-//            MainActivity.handler.moveFile(
-//                    download_route + File.separator,
-//                    song_selected.toString(),
-//                    getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator
-//            );
-//        }
-//        else
-//        {
-//            System.out.println("COPYING FILE!!!!");
-            MainActivity.handler.copyFile(
-                    download_route + File.separator,
-                    song_selected.toString(),
-                    getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator
-            );
-        //}
+        MainActivity.handler.copyFile(
+                download_route + File.separator,
+                song_selected.toString(),
+                getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator
+        );
 
         result.putExtra("songRoute",
                 getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator +
                         song_selected.toString()
         );
+
+        result.putExtra("editing", getIntent().getBooleanExtra("editing", false));
 
         setResult(RESULT_OK, result);
         finish();
@@ -201,21 +186,6 @@ public class Detailed_Song_View extends AppCompatActivity {
                 }
             }
         });
-
-
-
-        //onclick listener for the list of music already downloaded
-//        folder_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                TextView tView = findViewById(R.id.song_selected);
-//
-//                song_selected = music_files.get(i);
-//
-//                tView.setText("Song selected: " + song_selected);
-//                delete = false;
-//            }
-//        });
     }
 
     //a method used to filter out files that aren't normally used for audio files

@@ -9,7 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class EditSongAdapter extends RecyclerView.Adapter<EditSongAdapter.EditSongViewHolder> {
+public class  EditSongAdapter extends RecyclerView.Adapter<EditSongAdapter.EditSongViewHolder> {
 
     Song[] songList;
     Context context;
