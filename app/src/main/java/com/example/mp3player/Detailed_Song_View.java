@@ -72,11 +72,6 @@ public class Detailed_Song_View extends AppCompatActivity {
         backBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v)
             {
-//                System.out.println("I want to go back now.");
-//                Toast.makeText(getApplicationContext(), "I want to go back now", Toast.LENGTH_LONG).show();
-                //MainActivity.handler.writeToJSON(MainActivity.list_of_playLists);
-                //copy any changes made to the music list (ListView) to the arrayList
-
                 finish();
             }
         });

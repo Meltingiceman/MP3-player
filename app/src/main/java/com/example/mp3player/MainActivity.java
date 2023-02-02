@@ -135,12 +135,10 @@ public class MainActivity extends AppCompatActivity
     //when the plus button is clicked
     public void add_playList_btnClick(View view)
     {
+
         Intent intent = new Intent(this, Edit_Playlist.class);
         intent.putExtra("editing", false);
 
-
-//        DialogFragment newFragment = new AddSongDialogFragment();
-//        newFragment.show(getSupportFragmentManager(), "add_playlist");
     }
 
     public void initComponents()

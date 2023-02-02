@@ -61,6 +61,8 @@ public class Edit_Playlist extends AppCompatActivity {
             fillDisplay(deepCopy);
         }
 
+        //TODO: Support adding a playlist
+
         initButtons();
 
         edit_launcher = registerForActivityResult(
@@ -154,6 +156,8 @@ public class Edit_Playlist extends AppCompatActivity {
 
     protected void createAdapter()
     {
+        //TODO: fix huge spacing between items
+
         ArrayList<Song> plList = deepCopy.songList;
         Song[] tempList = new Song[plList.size()];
 
