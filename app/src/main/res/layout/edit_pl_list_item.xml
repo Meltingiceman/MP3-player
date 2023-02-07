@@ -2,8 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/edit_playlist_title"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?android:attr/selectableItemBackground">
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:padding="1dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -13,12 +14,18 @@
         android:background="@color/black"
         android:padding="12dp">
 
+        <CheckBox
+            android:id="@+id/edit_playlist_item_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+
         <TextView
             android:id="@+id/songName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
             android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/edit_playlist_item_checkbox"
             android:layout_marginStart="16dp"
             android:ellipsize="end"
 

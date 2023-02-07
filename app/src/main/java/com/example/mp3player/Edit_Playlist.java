@@ -8,6 +8,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -31,6 +34,9 @@ public class Edit_Playlist extends AppCompatActivity {
     private ActivityResultLauncher<Intent> edit_launcher;
     private ActivityResultLauncher<Intent> permission_launcher;
 
+    private EditSongAdapter adapter;
+    private ArrayList<Song> adapterDisplayList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,24 +44,26 @@ public class Edit_Playlist extends AppCompatActivity {
 
         Intent tmp = getIntent();
         boolean editing = tmp.getBooleanExtra("editing", false);
+        adapterDisplayList = new ArrayList<Song>();
 
-        if(editing)  //if editing an existing playlist
+        if (editing)  //if editing an existing playlist
         {
             String plName = tmp.getStringExtra("playlist_name");
             playList_ix = searchPlaylist(plName);
             editingPlaylist = MainActivity.list_of_playLists.get(playList_ix);
 
             deepCopy = new PlayList();
+
             deepCopy.playListName = editingPlaylist.playListName;
             deepCopy.checked = editingPlaylist.checked;
 
-            for(Song s : editingPlaylist.songList)
-            {
+            for (Song s : editingPlaylist.songList) {
                 Song newSong = new Song();
                 newSong.name = s.name;
                 newSong.path = s.path;
 
                 deepCopy.songList.add(newSong);
+                adapterDisplayList.add(newSong);
             }
 
             fillDisplay(deepCopy);
@@ -63,34 +71,44 @@ public class Edit_Playlist extends AppCompatActivity {
 
         //TODO: Support adding a playlist
 
-        initButtons();
+
 
         edit_launcher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    Intent resultingIntent = result.getData();
-                    String songName = resultingIntent.getStringExtra("songName");
-                    String songRoute = resultingIntent.getStringExtra("songRoute");
-                    boolean editing = resultingIntent.getBooleanExtra("editing", false);
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        Intent resultingIntent = result.getData();
+                        String songName = resultingIntent.getStringExtra("songName");
+                        String songRoute = resultingIntent.getStringExtra("songRoute");
+                        boolean editing = resultingIntent.getBooleanExtra("editing", false);
 
-                    if(!editing)
-                    {
-                        Song addition = new Song();
-                        addition.name = songName;
-                        addition.path = songRoute;
+                        if (!editing) {
+                            Song addition = new Song();
+                            addition.name = songName;
+                            addition.path = songRoute;
 
-                        deepCopy.songList.add(addition);
+                            deepCopy.songList.add(addition);
+                        }
+
+                        //update the list
+                        createAdapter();
+
+
                     }
-
-                    //update the list
-                    createAdapter();
-
-
                 }
-            }
         );
+
+        initComponents();
+
+        //----------------------------------DEBUG--------------------------------------------
+        Log.d("Edit_Playlist_deepCopy", "deep copy name is " + deepCopy.playListName +
+                " and size is " + deepCopy.songList.size());
+
+        for (int i = 0; i < deepCopy.songList.size(); i++) {
+            Log.d("Edit_Playlist_deepCopy", "(" + i + "): " + deepCopy.songList.get(i).name );
+
+        }
     }
 
     protected int searchPlaylist(String plName)
@@ -104,6 +122,39 @@ public class Edit_Playlist extends AppCompatActivity {
         }
 
         return -1;
+    }
+
+    public void initComponents()
+    {
+        initButtons();
+        EditText searchBar = findViewById(R.id.edit_playlist_search_bar);
+
+        searchBar.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                filterDisplayList(charSequence.toString().toLowerCase());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+    }
+
+    private void filterDisplayList(String s)
+    {
+        adapterDisplayList.clear();
+
+        adapterDisplayList.addAll(deepCopy.songList);
+        adapterDisplayList.removeIf(song -> s.length() > 0 && !song.name.toLowerCase().contains(s));
+
+        adapter.notifyDataSetChanged();
     }
 
     public void initButtons()
@@ -148,7 +199,6 @@ public class Edit_Playlist extends AppCompatActivity {
 
     public void fillDisplay(PlayList pl)
     {
-
         EditText ed = findViewById(R.id.edit_playlist_playListName);
         ed.setText(pl.playListName);
         createAdapter();
@@ -156,19 +206,12 @@ public class Edit_Playlist extends AppCompatActivity {
 
     protected void createAdapter()
     {
-        //TODO: fix huge spacing between items
-
-        ArrayList<Song> plList = deepCopy.songList;
-        Song[] tempList = new Song[plList.size()];
-
-        for(int i = 0; i < plList.size(); i++)
-        {
-            tempList[i] = plList.get(i);
-        }
+//        //refresh the display list with a deep copy of the selected playlist
+//        adapterDisplayList = deepCopy.songList;
 
         RecyclerView list = findViewById(R.id.edit_music_list);
 
-        EditSongAdapter adapter = new EditSongAdapter(this, tempList);
+        adapter = new EditSongAdapter(this, adapterDisplayList);
 
         list.setAdapter(adapter);
         list.setLayoutManager(new LinearLayoutManager(this));
