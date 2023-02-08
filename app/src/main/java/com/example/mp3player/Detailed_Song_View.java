@@ -69,12 +69,7 @@ public class Detailed_Song_View extends AppCompatActivity {
 
 
         ImageButton backBtn = (ImageButton) findViewById(R.id.back_btn);
-        backBtn.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v)
-            {
-                finish();
-            }
-        });
+        backBtn.setOnClickListener(v -> finish());
 
         displayFiles(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath());
     }

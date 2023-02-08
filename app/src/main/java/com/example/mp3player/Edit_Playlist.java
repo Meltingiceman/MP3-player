@@ -15,8 +15,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
@@ -75,27 +73,24 @@ public class Edit_Playlist extends AppCompatActivity {
 
         edit_launcher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        Intent resultingIntent = result.getData();
-                        String songName = resultingIntent.getStringExtra("songName");
-                        String songRoute = resultingIntent.getStringExtra("songRoute");
-                        boolean editing = resultingIntent.getBooleanExtra("editing", false);
+                result -> {
+                    Intent resultingIntent = result.getData();
+                    String songName = resultingIntent.getStringExtra("songName");
+                    String songRoute = resultingIntent.getStringExtra("songRoute");
+                    boolean editing1 = resultingIntent.getBooleanExtra("editing", false);
 
-                        if (!editing) {
-                            Song addition = new Song();
-                            addition.name = songName;
-                            addition.path = songRoute;
+                    if (!editing1) {
+                        Song addition = new Song();
+                        addition.name = songName;
+                        addition.path = songRoute;
 
-                            deepCopy.songList.add(addition);
-                        }
-
-                        //update the list
-                        createAdapter();
-
-
+                        deepCopy.songList.add(addition);
                     }
+
+                    //update the list
+                    createAdapter();
+
+
                 }
         );
 
@@ -124,6 +119,7 @@ public class Edit_Playlist extends AppCompatActivity {
         return -1;
     }
 
+    //initializes all the interactive components on the UI
     public void initComponents()
     {
         initButtons();
@@ -147,6 +143,7 @@ public class Edit_Playlist extends AppCompatActivity {
         });
     }
 
+    //filter the display based on what is in the searchbar
     private void filterDisplayList(String s)
     {
         adapterDisplayList.clear();
@@ -157,6 +154,7 @@ public class Edit_Playlist extends AppCompatActivity {
         adapter.notifyDataSetChanged();
     }
 
+    //initialize the buttons on the display
     public void initButtons()
     {
         ImageButton addBtn = findViewById(R.id.edit_playlist_add_song);
@@ -164,36 +162,22 @@ public class Edit_Playlist extends AppCompatActivity {
         Button cancelBtn = findViewById(R.id.edit_playlist_cancel);
         Button confirmBtn = findViewById(R.id.edit_playlist_confirm);
 
-        addBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                addSong_click(view);
-            }
+        //when the add button is clicked then call the addSong_click method
+        addBtn.setOnClickListener(this::addSong_click);
+
+        deleteBtn.setOnClickListener(view -> {
+            //TODO: need to update the song buttons to support selecting mutliple
         });
 
-        deleteBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //TODO: need to update the song buttons to support selecting mutliple
-            }
-        });
+        //cancel button listener
+        cancelBtn.setOnClickListener(view -> finish());
 
-        cancelBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
-
-        confirmBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                //save the updated playlist
-                MainActivity.list_of_playLists.set(playList_ix, deepCopy);
-                MainActivity.handler.writeToJSON(MainActivity.list_of_playLists);
-                finish();
-            }
+        //confirm button listener
+        confirmBtn.setOnClickListener(view -> {
+            //save the updated playlist
+            MainActivity.list_of_playLists.set(playList_ix, deepCopy);
+            MainActivity.handler.writeToJSON(MainActivity.list_of_playLists);
+            finish();
         });
     }
 
@@ -206,9 +190,6 @@ public class Edit_Playlist extends AppCompatActivity {
 
     protected void createAdapter()
     {
-//        //refresh the display list with a deep copy of the selected playlist
-//        adapterDisplayList = deepCopy.songList;
-
         RecyclerView list = findViewById(R.id.edit_music_list);
 
         adapter = new EditSongAdapter(this, adapterDisplayList);
