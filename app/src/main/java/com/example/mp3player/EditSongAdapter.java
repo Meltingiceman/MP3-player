@@ -4,7 +4,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.CheckBox;
 
@@ -30,45 +29,30 @@ public class  EditSongAdapter extends RecyclerView.Adapter<EditSongAdapter.EditS
     @NonNull
     @Override
     public EditSongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.edit_pl_list_item, parent, false);
 
-        CheckBox c = view.findViewById(R.id.edit_playlist_item_checkbox);
-        String plName = ( (TextView)view.findViewById(R.id.songName) ).getText().toString();
         EditSongViewHolder viewHolder = new EditSongViewHolder(view);
 
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                c.setChecked(!c.isChecked());
-                viewHolder.checked.setChecked(!viewHolder.checked.isChecked());
-            }
-        });
-
-        viewHolder.checked.setOnCheckedChangeListener(null);
-        viewHolder.checked.setChecked(checked.contains(viewHolder.songName.toString().toLowerCase()));
-        viewHolder.checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b)
-                    checked.add(viewHolder.songName.toString().toLowerCase());
-                else
-                    checked.remove(viewHolder.songName.toString().toLowerCase());
-            }
-        });
+        view.setOnClickListener(view1 -> viewHolder.checked.setChecked(!viewHolder.checked.isChecked()));
 
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull EditSongViewHolder holder, int position, @NonNull List<Object> payloads) {
+
         super.onBindViewHolder(holder, position, payloads);
 
         holder.checked.setOnCheckedChangeListener(null);
-        holder.itemView.setOnClickListener(null);
-
-        //TODO: I started working on this but I didn't finish (this was about the checkboxes not staying checked when searching)
-
+        holder.checked.setChecked(checked.contains(holder.songName.getText().toString()));
+        holder.checked.setOnCheckedChangeListener((compoundButton, b) -> {
+            if(b)
+                checked.add(holder.songName.getText().toString());
+            else
+                checked.remove(holder.songName.getText().toString());
+        });
     }
 
     @Override
@@ -81,7 +65,7 @@ public class  EditSongAdapter extends RecyclerView.Adapter<EditSongAdapter.EditS
         return songList.size();
     }
 
-    public class EditSongViewHolder extends RecyclerView.ViewHolder
+    public static class EditSongViewHolder extends RecyclerView.ViewHolder
     {
         TextView songName;
         CheckBox checked;
