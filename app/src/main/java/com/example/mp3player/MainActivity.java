@@ -40,6 +40,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -554,4 +555,29 @@ class Song
 {
     public String name;
     public String path;
+
+    //checks if the name of the song is the string that is passed
+    public boolean isName(String name)
+    {
+        return this.name.equals(name);
+    }
+
+    public int compareTo(String str)
+    {
+        return name.compareTo(str);
+    }
+
+    public int compareToIgnoreCase(String str)
+    {
+        return name.compareToIgnoreCase(str);
+    }
+}
+
+class SongComparator implements Comparator<Song>
+{
+
+    public int compare(Song s1, Song s2)
+    {
+        return s1.name.compareToIgnoreCase(s2.name);
+    }
 }

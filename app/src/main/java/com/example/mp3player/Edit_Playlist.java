@@ -1,6 +1,7 @@
 package com.example.mp3player;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,18 +12,28 @@ import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class Edit_Playlist extends AppCompatActivity {
 
@@ -50,8 +61,10 @@ public class Edit_Playlist extends AppCompatActivity {
             playList_ix = searchPlaylist(plName);
             editingPlaylist = MainActivity.list_of_playLists.get(playList_ix);
 
-            deepCopy = new PlayList();
+            editingPlaylist.songList.sort(new SongComparator());
 
+            //create a deep copy of the playlist
+            deepCopy = new PlayList();
             deepCopy.playListName = editingPlaylist.playListName;
             deepCopy.checked = editingPlaylist.checked;
 
@@ -64,34 +77,38 @@ public class Edit_Playlist extends AppCompatActivity {
                 adapterDisplayList.add(newSong);
             }
 
+            //fill display with data from the playlist
             fillDisplay(deepCopy);
         }
 
         //TODO: Support adding a playlist
 
-
-
         edit_launcher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    Intent resultingIntent = result.getData();
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+
+                Intent resultingIntent = result.getData();
+
+                boolean backPressed = (resultingIntent == null);
+                if(backPressed)
+                    return;
+
+                boolean editing1 = resultingIntent.getBooleanExtra("editing", false);
+
+                if (!editing1) {
                     String songName = resultingIntent.getStringExtra("songName");
                     String songRoute = resultingIntent.getStringExtra("songRoute");
-                    boolean editing1 = resultingIntent.getBooleanExtra("editing", false);
 
-                    if (!editing1) {
-                        Song addition = new Song();
-                        addition.name = songName;
-                        addition.path = songRoute;
+                    Song addition = new Song();
+                    addition.name = songName;
+                    addition.path = songRoute;
 
-                        deepCopy.songList.add(addition);
-                    }
-
-                    //update the list
-                    createAdapter();
-
-
+                    addSong(addition);
                 }
+
+                //update the list
+                adapter.notifyDataSetChanged();
+            }
         );
 
         initComponents();
@@ -167,6 +184,7 @@ public class Edit_Playlist extends AppCompatActivity {
 
         deleteBtn.setOnClickListener(view -> {
             //TODO: need to update the song buttons to support selecting mutliple
+            removeCheckedSongs();
         });
 
         //cancel button listener
@@ -175,6 +193,9 @@ public class Edit_Playlist extends AppCompatActivity {
         //confirm button listener
         confirmBtn.setOnClickListener(view -> {
             //save the updated playlist
+            String newPlaylistName = ((EditText)findViewById(R.id.edit_playlist_playListName)).getText().toString();
+            deepCopy.playListName = newPlaylistName;
+
             MainActivity.list_of_playLists.set(playList_ix, deepCopy);
             MainActivity.handler.writeToJSON(MainActivity.list_of_playLists);
             finish();
@@ -231,6 +252,61 @@ public class Edit_Playlist extends AppCompatActivity {
         }
     }
 
+    //removes all the checked songs from the playlist
+    private void removeCheckedSongs()
+    {
+        ArrayList<String> checked = adapter.getChecked();
+        int songListSize = deepCopy.songList.size();
+
+        //sort the list just to be safe
+        deepCopy.songList.sort(new SongComparator());
+
+        for(String str:checked)
+        {
+            int ix = binarySearch(0, songListSize - 1, str);
+
+            if(ix != -1) {
+                removeSongAt(ix);
+                adapter.notifyItemRemoved(ix);
+            }
+        }
+    }
+
+    private void removeSongAt(int ix)
+    {
+        deepCopy.songList.remove(ix);
+        adapterDisplayList.remove(ix);
+    }
+
+    private void addSong(Song song)
+    {
+        deepCopy.songList.add(song);
+        adapterDisplayList.add(song);
+
+        deepCopy.songList.sort(new SongComparator());
+        adapterDisplayList.sort(new SongComparator());
+    }
+
+    //recursive binary search for finding a songName in the deep copy
+    public int binarySearch(int left, int right, String query)
+    {
+        if(right >= left)
+        {
+            int mid = left + (right - left)/2;
+
+            //if what we're looking for is in the middle
+            if( deepCopy.songList.get(mid).isName(query))
+                return mid;
+
+            if( deepCopy.songList.get(mid).compareToIgnoreCase(query) > 0 )
+                return binarySearch(left, mid - 1, query);
+
+            return binarySearch(mid + 1, right, query);
+        }
+
+        return -1;
+    }
+
     private void startEditIntent()
     {
         Intent sendingIntent = new Intent(this, Detailed_Song_View.class);
@@ -274,11 +350,91 @@ public class Edit_Playlist extends AppCompatActivity {
         }
     }
 
-    public void deleteSong(int position)
+    private class EditSongAdapter extends RecyclerView.Adapter<EditSongViewHolder>
     {
-        editingPlaylist.songList.remove(position);
-        MainActivity.handler.writeToJSON(MainActivity.list_of_playLists);
-        createAdapter();
+        ArrayList<Song> songList;
+        ArrayList<String> checked;
+        Context context;
+        ActivityResultLauncher<Intent> editSongLauncher;
+
+        public EditSongAdapter(Context ct, ArrayList<Song> s)
+        {
+            context = ct;
+            songList = s;
+            checked = new ArrayList<>();
+        }
+
+        @NonNull
+        @Override
+        public EditSongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+
+            LayoutInflater inflater = LayoutInflater.from(context);
+            View view = inflater.inflate(R.layout.edit_pl_list_item, parent, false);
+
+            ImageButton deleteBtn = view.findViewById(R.id.delete_song_btn);
+            ImageButton editBtn = view.findViewById(R.id.edit_sng_btn);
+
+            EditSongViewHolder viewHolder = new EditSongViewHolder(view);
+
+            view.setOnClickListener(view1 -> viewHolder.checked.setChecked(!viewHolder.checked.isChecked()));
+
+            return viewHolder;
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull EditSongViewHolder holder, int position, @NonNull List<Object> payloads) {
+
+            super.onBindViewHolder(holder, position, payloads);
+
+            holder.checked.setOnCheckedChangeListener(null);
+            holder.checked.setChecked(checked.contains(holder.songName.getText().toString()));
+            holder.checked.setOnCheckedChangeListener((compoundButton, b) -> {
+                if(b)
+                    checked.add(holder.songName.getText().toString());
+                else
+                    checked.remove(holder.songName.getText().toString());
+            });
+
+            holder.deleteBtn.setOnClickListener(view -> {
+                removeSongAt(position);
+            });
+
+            holder.editBtn.setOnClickListener(view -> {
+                Intent songEditIntent = new Intent(context, Detailed_Song_View.class);
+                songEditIntent.putExtra("songList", songList);
+                songEditIntent.putExtra("songIndex", position);
+                songEditIntent.putExtra("editing", true);
+
+                edit_launcher.launch(songEditIntent);
+            });
+        }
+
+        public ArrayList<String> getChecked(){ return checked; }
+
+        @Override
+        public void onBindViewHolder(@NonNull EditSongViewHolder holder, int position) {
+            holder.songName.setText( songList.get(position).name );
+        }
+
+        @Override
+        public int getItemCount() {
+            return songList.size();
+        }
+    }
+}
+class EditSongViewHolder extends RecyclerView.ViewHolder
+{
+    TextView songName;
+    CheckBox checked;
+    ImageButton editBtn;
+    ImageButton deleteBtn;
+    public EditSongViewHolder(@NonNull View itemView) {
+        super(itemView);
+
+        songName = itemView.findViewById(R.id.songName);
+        checked = itemView.findViewById(R.id.edit_playlist_item_checkbox);
+        editBtn = itemView.findViewById(R.id.edit_sng_btn);
+        deleteBtn = itemView.findViewById(R.id.edit_playlist_trash_btn);
 
     }
 }

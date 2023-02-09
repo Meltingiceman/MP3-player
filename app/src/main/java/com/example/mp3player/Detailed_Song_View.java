@@ -90,20 +90,25 @@ public class Detailed_Song_View extends AppCompatActivity {
         Song addition = new Song();
         addition.name = song_name;
         MainActivity.handler.copyFile(
-                download_route + File.separator,
-                song_selected.toString(),
-                getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator
+            download_route + File.separator,
+            song_selected.toString(),
+            getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator
         );
 
         result.putExtra("songRoute",
-                getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator +
-                        song_selected.toString()
+        getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator +
+                song_selected.toString()
         );
 
         result.putExtra("editing", getIntent().getBooleanExtra("editing", false));
 
         setResult(RESULT_OK, result);
         finish();
+    }
+
+    private void populateEditingUI()
+    {
+        //TODO: populate the UI with details about the song that is being edited
     }
 
     public void refreshList(View view)
