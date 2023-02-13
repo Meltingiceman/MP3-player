@@ -1,8 +1,8 @@
 package com.example.mp3player;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -30,22 +30,19 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class Edit_Playlist extends AppCompatActivity {
 
     private int playList_ix;
-    private PlayList editingPlaylist;
     private PlayList deepCopy;
     private ActivityResultLauncher<Intent> edit_launcher;
-    private ActivityResultLauncher<Intent> permission_launcher;
 
     private EditSongAdapter adapter;
     private ArrayList<Song> adapterDisplayList;
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,13 +50,13 @@ public class Edit_Playlist extends AppCompatActivity {
 
         Intent tmp = getIntent();
         boolean editing = tmp.getBooleanExtra("editing", false);
-        adapterDisplayList = new ArrayList<Song>();
+        adapterDisplayList = new ArrayList<>();
 
         if (editing)  //if editing an existing playlist
         {
             String plName = tmp.getStringExtra("playlist_name");
             playList_ix = searchPlaylist(plName);
-            editingPlaylist = MainActivity.list_of_playLists.get(playList_ix);
+            PlayList editingPlaylist = MainActivity.list_of_playLists.get(playList_ix);
 
             editingPlaylist.songList.sort(new SongComparator());
 
@@ -95,6 +92,8 @@ public class Edit_Playlist extends AppCompatActivity {
 
                 boolean editing1 = resultingIntent.getBooleanExtra("editing", false);
 
+                Log.d("editing", "Editing value is: " + editing1);
+
                 if (!editing1) {
                     String songName = resultingIntent.getStringExtra("songName");
                     String songRoute = resultingIntent.getStringExtra("songRoute");
@@ -104,10 +103,22 @@ public class Edit_Playlist extends AppCompatActivity {
                     addition.path = songRoute;
 
                     addSong(addition);
+
+                    //don't know where the new item will go after being sorted
+                    adapter.notifyDataSetChanged();
+                }
+                else
+                {
+                    int ix = resultingIntent.getIntExtra("songIndex", -1);
+                    String newSongName = resultingIntent.getStringExtra("songName");
+                    String newSongRoute = resultingIntent.getStringExtra("songRoute");
+
+                    updateSong(ix, newSongName, newSongRoute);
+                    adapter.notifyItemChanged(ix);
                 }
 
                 //update the list
-                adapter.notifyDataSetChanged();
+
             }
         );
 
@@ -161,6 +172,7 @@ public class Edit_Playlist extends AppCompatActivity {
     }
 
     //filter the display based on what is in the searchbar
+    @SuppressLint("NotifyDataSetChanged")
     private void filterDisplayList(String s)
     {
         adapterDisplayList.clear();
@@ -182,10 +194,7 @@ public class Edit_Playlist extends AppCompatActivity {
         //when the add button is clicked then call the addSong_click method
         addBtn.setOnClickListener(this::addSong_click);
 
-        deleteBtn.setOnClickListener(view -> {
-            //TODO: need to update the song buttons to support selecting mutliple
-            removeCheckedSongs();
-        });
+        deleteBtn.setOnClickListener(view -> removeCheckedSongs());
 
         //cancel button listener
         cancelBtn.setOnClickListener(view -> finish());
@@ -227,12 +236,10 @@ public class Edit_Playlist extends AppCompatActivity {
                 AlertDialog.Builder popup = new AlertDialog.Builder(this);
                 popup.setMessage("Please allow this app to manage your files.");
                 popup.setTitle("Permissions");
-                popup.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        finishAffinity();
-                        startActivity(permissionIntent);
-                    }
+
+                popup.setNegativeButton("Ok", (dialogInterface, i) -> {
+                    finishAffinity();
+                    startActivity(permissionIntent);
                 });
                 AlertDialog alert = popup.create();
                 alert.show();
@@ -287,6 +294,15 @@ public class Edit_Playlist extends AppCompatActivity {
         adapterDisplayList.sort(new SongComparator());
     }
 
+    private void updateSong(int index, String name, String route)
+    {
+        adapterDisplayList.get(index).name = deepCopy.songList.get(index).name = name;
+        adapterDisplayList.get(index).path = deepCopy.songList.get(index).path = route;
+
+        deepCopy.songList.sort(new SongComparator());
+        adapterDisplayList.sort(new SongComparator());
+    }
+
     //recursive binary search for finding a songName in the deep copy
     public int binarySearch(int left, int right, String query)
     {
@@ -314,48 +330,11 @@ public class Edit_Playlist extends AppCompatActivity {
         edit_launcher.launch(sendingIntent);
     }
 
-    public void editSong (int position)
-    {
-        System.out.println("IN EDIT SONG");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if(!Environment.isExternalStorageManager())
-            {
-                System.out.println("ASKING FOR PERMISSION");
-                Intent permissionIntent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                startActivity(permissionIntent);
-            }
-        }
-        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-        {
-            if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-
-                System.out.println("ASKING FOR PERMISSION");
-                requestPermissions( new String[] { Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE },  1);
-            }
-        }
-        else {
-
-            System.out.println("I GOT PERMISSION");
-
-            Song song = deepCopy.songList.get(position);
-
-            //sending the data to auto fill for editing
-            Intent sendingIntent = new Intent(this, Detailed_Song_View.class);
-            sendingIntent.putExtra("editing", true);
-            sendingIntent.putExtra("songName", song.name);
-            sendingIntent.putExtra("dataPath", song.path);
-
-            edit_launcher.launch(sendingIntent);
-        }
-    }
-
     private class EditSongAdapter extends RecyclerView.Adapter<EditSongViewHolder>
     {
         ArrayList<Song> songList;
         ArrayList<String> checked;
         Context context;
-        ActivityResultLauncher<Intent> editSongLauncher;
 
         public EditSongAdapter(Context ct, ArrayList<Song> s)
         {
@@ -370,9 +349,6 @@ public class Edit_Playlist extends AppCompatActivity {
 
             LayoutInflater inflater = LayoutInflater.from(context);
             View view = inflater.inflate(R.layout.edit_pl_list_item, parent, false);
-
-            ImageButton deleteBtn = view.findViewById(R.id.delete_song_btn);
-            ImageButton editBtn = view.findViewById(R.id.edit_sng_btn);
 
             EditSongViewHolder viewHolder = new EditSongViewHolder(view);
 
@@ -395,13 +371,12 @@ public class Edit_Playlist extends AppCompatActivity {
                     checked.remove(holder.songName.getText().toString());
             });
 
-            holder.deleteBtn.setOnClickListener(view -> {
-                removeSongAt(position);
-            });
+            holder.deleteBtn.setOnClickListener(view -> removeSongAt(position));
 
             holder.editBtn.setOnClickListener(view -> {
                 Intent songEditIntent = new Intent(context, Detailed_Song_View.class);
-                songEditIntent.putExtra("songList", songList);
+                songEditIntent.putExtra("songName", songList.get(position).name);
+                songEditIntent.putExtra("songRoute", songList.get(position).path);
                 songEditIntent.putExtra("songIndex", position);
                 songEditIntent.putExtra("editing", true);
 
@@ -434,7 +409,7 @@ class EditSongViewHolder extends RecyclerView.ViewHolder
         songName = itemView.findViewById(R.id.songName);
         checked = itemView.findViewById(R.id.edit_playlist_item_checkbox);
         editBtn = itemView.findViewById(R.id.edit_sng_btn);
-        deleteBtn = itemView.findViewById(R.id.edit_playlist_trash_btn);
+        deleteBtn = itemView.findViewById(R.id.delete_song_btn);
 
     }
 }

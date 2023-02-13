@@ -12,9 +12,7 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -25,6 +23,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,16 +31,11 @@ import java.util.List;
 
 public class Detailed_Song_View extends AppCompatActivity {
 
-    private CheckBox deleteOption;
     private ListView downloads_list;
-    private ListView folder_list;
-    private ArrayList<String> list_of_files;
     private String download_route;
     private String song_selected = null;
-    private String song_name = null;
+    private boolean editing;
     private EditText route;
-
-    private boolean delete;
     private int selectedItem;
 
     @Override
@@ -51,7 +45,7 @@ public class Detailed_Song_View extends AppCompatActivity {
 
         Intent thisIntent = getIntent();
         download_route = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString();
-        boolean editing = thisIntent.getBooleanExtra("editing", false);
+        editing = thisIntent.getBooleanExtra("editing", false);
         selectedItem = -1;
 
         route = findViewById(R.id.File_URL);
@@ -61,6 +55,7 @@ public class Detailed_Song_View extends AppCompatActivity {
 
         if (editing) {
             //get editing data
+            populateEditingUI();
         }
         else {
             //fill in with blank data for new addition to the playlist (if any)
@@ -78,7 +73,9 @@ public class Detailed_Song_View extends AppCompatActivity {
     public void save_click(View view)
     {
         EditText name = findViewById(R.id.songName);
-        song_name = name.getText().toString();
+        String song_name = name.getText().toString();
+
+        //make sure a song name is typed and a song is selected from the files list
         if(song_name.length() == 0 || song_selected == null)
         {
             Toast.makeText(getApplicationContext(), "Select a SONG and NAME.", Toast.LENGTH_SHORT).show();
@@ -86,29 +83,49 @@ public class Detailed_Song_View extends AppCompatActivity {
         }
 
         Intent result = new Intent();
+        Intent currentIntent = getIntent();
+
         result.putExtra("songName", song_name);
-        Song addition = new Song();
-        addition.name = song_name;
-        MainActivity.handler.copyFile(
-            download_route + File.separator,
-            song_selected.toString(),
-            getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator
-        );
-
         result.putExtra("songRoute",
-        getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator +
-                song_selected.toString()
+            getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator +
+                song_selected
         );
+        result.putExtra("editing", currentIntent.getBooleanExtra("editing", false));
 
-        result.putExtra("editing", getIntent().getBooleanExtra("editing", false));
+        if(!editing) {
 
+            Song addition = new Song();
+            addition.name = song_name;
+
+            //copy file from downloads to app's data folder
+            MainActivity.handler.copyFile(
+                    download_route + File.separator,
+                    song_selected,
+                    getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator
+            );
+
+        }
+        else {
+            result.putExtra("songIndex", currentIntent.getIntExtra("songIndex", -1));
+        }
         setResult(RESULT_OK, result);
         finish();
     }
 
     private void populateEditingUI()
     {
-        //TODO: populate the UI with details about the song that is being edited
+        Intent intent = getIntent();
+        String songName = intent.getStringExtra("songName");
+        String songRoute = intent.getStringExtra("songRoute");
+        songRoute = songRoute.substring( songRoute.lastIndexOf(File.separator) + 1);
+
+        EditText songNameText = findViewById(R.id.songName);
+        TextView routeDisplay = findViewById(R.id.song_selected);
+
+        song_selected = songName;
+
+        songNameText.setText(songName);
+        routeDisplay.setText("Song selected: " + songRoute);
     }
 
     public void refreshList(View view)
@@ -119,66 +136,48 @@ public class Detailed_Song_View extends AppCompatActivity {
 
     protected void displayFiles(String path)
     {
-//        System.out.println("DEBUG: STARTING DISPLAYFILES WITH PATH: " + path);
         File location = new File(path);
-        File musicFolder = new File(getFilesDir() + File.separator + MainActivity.MUSIC_FOLDER_NAME);
         String[] pathNames = location.list();
-        String[] music_folder_pathNames = musicFolder.list();
-        ArrayList<File> downloadFiles = new ArrayList<File>();
-        ArrayList<String> music_files = new ArrayList<String>();
+        ArrayList<File> downloadFiles = new ArrayList<>();
 
-        if(music_folder_pathNames != null) {
+        if (pathNames != null) {
+            for (String pathname : pathNames) {
+                File f = new File(path + File.separator + pathname);
 
-            for (String song : music_folder_pathNames) {
-                File f = new File(musicFolder.toString() + File.separator + song);
-
-                //only thing in this folder should be files
-                music_files.add(f.getName());
+                if(filterPath(f.toString()))
+                    downloadFiles.add(f);
             }
         }
 
-        for (String pathname : pathNames) {
-            File f = new File(path + File.separator + pathname);
-
-            if(filterPath(f.toString()))
-                downloadFiles.add(f);
-        }
-
-        ArrayAdapter<String> folder_adapter = new ArrayAdapter<String>(this, R.layout.simple_list_item, music_files);
         FileAdapter download_adapter = new FileAdapter(this, R.layout.music_file_list_item, downloadFiles);
 
         downloads_list.setAdapter(download_adapter);
-//        folder_list.setAdapter(folder_adapter);
 
         //when an item from the download list gets clicked
-        downloads_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+        downloads_list.setOnItemClickListener((adapterView, view, i, l) -> {
 
-                view.setSelected(true);
-                selectedItem = i;
-                if(downloadFiles.get(i).isDirectory())
-                {
-                    String route_so_far = route.getText().toString();
+            view.setSelected(true);
+            selectedItem = i;
+            if(downloadFiles.get(i).isDirectory())
+            {
+                String route_so_far = route.getText().toString();
 
-                    if(route_so_far.charAt(route_so_far.length() - 1) != File.separatorChar)
-                        route_so_far += File.separatorChar;
+                if(route_so_far.charAt(route_so_far.length() - 1) != File.separatorChar)
+                    route_so_far += File.separatorChar;
 
-                    route.setText( route_so_far + downloadFiles.get(i).getName() );
-                    refreshList(null);
+                route.setText( route_so_far + downloadFiles.get(i).getName() );
+                refreshList(null);
 
-                }
-                else
-                {
+            }
+            else
+            {
 
-                    TextView tView = findViewById(R.id.song_selected);
+                TextView tView = findViewById(R.id.song_selected);
 
-                    //song selected will be at the ith position
-                    song_selected = downloadFiles.get(i).getName();
+                //song selected will be at the ith position
+                song_selected = downloadFiles.get(i).getName();
 
-                    tView.setText("Song selected: " + song_selected);
-                    delete = true;
-                }
+                tView.setText("Song selected: " + song_selected);
             }
         });
     }
@@ -248,7 +247,7 @@ public class Detailed_Song_View extends AppCompatActivity {
             if(selectedItem == position)
             {
 
-                row.setBackgroundColor(getResources().getColor(R.color.purple_700));
+                row.setBackgroundColor(ContextCompat.getColor(context, R.color.purple_700));
             }
 
             String text = files.get(position).getName();
