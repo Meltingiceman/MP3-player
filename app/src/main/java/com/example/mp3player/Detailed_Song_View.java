@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,6 +86,9 @@ public class Detailed_Song_View extends AppCompatActivity {
         Intent result = new Intent();
         Intent currentIntent = getIntent();
 
+        Log.d("DETAILED", "Song route: " + getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator +
+                song_selected);
+
         result.putExtra("songName", song_name);
         result.putExtra("songRoute",
             getFilesDir().toString() + File.separator + FileHandler.MUSIC_FOLDER_NAME + File.separator +
@@ -122,7 +126,7 @@ public class Detailed_Song_View extends AppCompatActivity {
         EditText songNameText = findViewById(R.id.songName);
         TextView routeDisplay = findViewById(R.id.song_selected);
 
-        song_selected = songName;
+        song_selected = songRoute;
 
         songNameText.setText(songName);
         routeDisplay.setText("Song selected: " + songRoute);

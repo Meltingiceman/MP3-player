@@ -16,10 +16,11 @@ public class MusicPlayer {
     private State previousState;
 
     private ArrayList<Song> playList;
-    private MediaPlayer player;
+    private final MediaPlayer player;
     private int song_ix;
-    private static MusicPlayer instance = new MusicPlayer();
-    
+    private static final MusicPlayer instance = new MusicPlayer();
+
+    //private constructor
     private MusicPlayer()
     {
         //MusicPlayer is being initialized

@@ -5,7 +5,7 @@
     android:background="?android:selectableItemBackground"
     android:id="@+id/SongRow"
 
-    android:layout_marginBottom="4sp"
+    android:layout_marginBottom="2sp"
     >
 
     <RelativeLayout
@@ -27,6 +27,14 @@
             android:textColor="#D6D6D6"
             android:textSize="18sp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="--:--"
+            android:textSize="20sp"
+            android:textColor="@android:color/darker_gray"
+            />
 
     </RelativeLayout>
 

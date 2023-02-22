@@ -1,5 +1,6 @@
 package com.example.mp3player;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -7,10 +8,8 @@ import android.content.IntentFilter;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyCallback;
 import android.view.View;
 import android.widget.ImageButton;
@@ -19,7 +18,6 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -28,23 +26,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 public class PlayListView extends AppCompatActivity {
-
-
-
     private static int playList_ix;
     private ActivityResultLauncher<Intent> edit_launcher;
-    private MusicIntentReceiver receiver;
     public static boolean changeState;
-
     private TextView time;
     private TextView songPlaying;
     private SeekBar progressBar;
     private ImageButton playPauseButton;
-
     private RecyclerView songList;
     private SongAdapter listAdapter;
-    private AudioManager audioManager;
-    private AudioFocusRequest audioFocusRequest;
 
     private final Handler progressHandler = new Handler();
     private ArrayList<Song> playList;
@@ -55,17 +45,8 @@ public class PlayListView extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
 
-        System.out.println("DEBUG: BACK BTN PRESSED");
         MusicPlayer.getInstance().pause();
         MusicPlayer.getInstance().reset();
-//        if (audioFocusRequest != null) {
-//
-////            mediaPlayer.pause();   //don't know if pausing is necessary for releasing
-////            mediaPlayer.release();
-////            mediaPlayer = null;
-//
-//            audioManager.abandonAudioFocusRequest(audioFocusRequest);
-//        }
 
         finish();
     }
@@ -90,9 +71,6 @@ public class PlayListView extends AppCompatActivity {
             public void run() {
                 if(MusicPlayer.getInstance().getState() != State.INIT &&
                         MusicPlayer.getInstance().getState() != State.INTERRUPTED) {
-
-
-                    System.out.println(MusicPlayer.getInstance().getCurrentTime());
 
                     if(changeState)
                     {
@@ -134,39 +112,30 @@ public class PlayListView extends AppCompatActivity {
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         //UI elements
-        TextView playListName = findViewById(R.id.playListName);
-        songList = findViewById(R.id.songList);
-        playPauseButton = findViewById(R.id.playPause_btn);
-        progressBar = findViewById(R.id.seekBar);
-        songPlaying = findViewById(R.id.songPlaying);
-        time = findViewById(R.id.time);
+
+
+        initComponents();
 
         //load the selected playlist into the MusicPlayer
         MusicPlayer.getInstance().loadPlayList(playList);
         MusicPlayer.getInstance().setOnCompletionListener(mediaPlayer -> notifyStateChange());
 
-        playListName.setText("PlayList");
+
 
         //creates and attaches the adapter that the recyclerView
         createAdapter();
 
-        focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
-            @Override
-            public void onAudioFocusChange(int i) {
-                switch(i)
-                {
-                    case AudioManager.AUDIOFOCUS_GAIN:
-//                        if(MusicPlayer.getInstance().getState() == State.INTERRUPTED)
-                        System.out.println("DEBUG: AUDIO FOCUS GAIN");
-                        MusicPlayer.getInstance().resume();
-                        break;
-                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                    case AudioManager.AUDIOFOCUS_LOSS:
-                        System.out.println("AUDIO FOCUS LOSS");
-                        MusicPlayer.getInstance().pause(true);
-                        notifyStateChange();
-                        break;
-                }
+        focusChangeListener = i -> {
+            switch(i)
+            {
+                case AudioManager.AUDIOFOCUS_GAIN:
+                    MusicPlayer.getInstance().resume();
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                case AudioManager.AUDIOFOCUS_LOSS:
+                    MusicPlayer.getInstance().pause(true);
+                    notifyStateChange();
+                    break;
             }
         };
 
@@ -179,15 +148,11 @@ public class PlayListView extends AppCompatActivity {
             };
         }
 
-        receiver = new MusicIntentReceiver();
+        MusicIntentReceiver receiver = new MusicIntentReceiver();
         edit_launcher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     ArrayList<PlayList> list_of_playLists = MainActivity.list_of_playLists;
-                    System.out.println("Name back from activity: " + list_of_playLists.get(playList_ix).playListName);
-
-                    //numSongs.setText(Integer.toString(playList.size())  + " song(s) in playlist");
-                    //mediaPlayer.reset();
 
                 }
         );
@@ -198,9 +163,6 @@ public class PlayListView extends AppCompatActivity {
             public void run() {
                 if(MusicPlayer.getInstance().getState() != State.INIT &&
                         MusicPlayer.getInstance().getState() != State.INTERRUPTED) {
-
-
-                    System.out.println(MusicPlayer.getInstance().getCurrentTime());
 
                     if(changeState)
                     {
@@ -230,39 +192,9 @@ public class PlayListView extends AppCompatActivity {
 
 
 
-        //listeners for the seekbar that represents the progress in a song
-        progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(MusicPlayer.getInstance().getState() != State.IDLE &&
-                        MusicPlayer.getInstance().getState() != State.INIT && fromUser) {
-
-                    MusicPlayer.getInstance().goToTime(progress * 1000);
-
-                    String timer = convertTime(MusicPlayer.getInstance().getCurrentTime()) + "/" +
-                            convertTime(MusicPlayer.getInstance().getSongMax());
-                    time.setText(timer);
-
-                    //Don't really know why this is needed but without this items in the recyclerview disappear
-                    //listAdapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                MusicPlayer.getInstance().pause();
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-                MusicPlayer.getInstance().resume();
 
 
-            }
-        });
-
-//        //register the receiver and intent at the end of onCreate
+        //register the receiver and intent at the end of onCreate
         IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
         registerReceiver(receiver, filter);
 
@@ -287,6 +219,64 @@ public class PlayListView extends AppCompatActivity {
         return res;
     }
 
+    private void initComponents()
+    {
+        TextView playListName = findViewById(R.id.playListName);
+        songList = findViewById(R.id.songList);
+        progressBar = findViewById(R.id.seekBar);
+        songPlaying = findViewById(R.id.songPlaying);
+        time = findViewById(R.id.time);
+
+        playListName.setText("PlayList");
+
+        //listeners for the seekbar that represents the progress in a song
+        progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(MusicPlayer.getInstance().getState() != State.IDLE &&
+                        MusicPlayer.getInstance().getState() != State.INIT && fromUser) {
+
+                    MusicPlayer.getInstance().goToTime(progress * 1000);
+
+                    String timer = convertTime(MusicPlayer.getInstance().getCurrentTime()) + "/" +
+                            convertTime(MusicPlayer.getInstance().getSongMax());
+                    time.setText(timer);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                MusicPlayer.getInstance().pause();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+                MusicPlayer.getInstance().resume();
+
+
+            }
+        });
+
+        initButtons();
+    }
+
+    private void initButtons()
+    {
+        playPauseButton = findViewById(R.id.playPause_btn);
+        ImageButton shuffleBtn = findViewById(R.id.shuffle_btn);
+        ImageButton skipRightBtn = findViewById(R.id.skip_right_btn);
+        ImageButton skipLeftBtn = findViewById(R.id.skip_left_btn);
+
+        playPauseButton.setOnClickListener(this::playPause_btn_click);
+        shuffleBtn.setOnClickListener(this::shuffle_btn_click);
+        skipLeftBtn.setOnClickListener(this::skip_left_click);
+        skipRightBtn.setOnClickListener(this::skip_right_click);
+
+
+
+    }
+
     private ArrayList<Song> getPlayList()
     {
         //get the indexes of the selected playlist(s)
@@ -306,10 +296,9 @@ public class PlayListView extends AppCompatActivity {
         //combined playlist
         ArrayList<Song> songs = new ArrayList<Song>();
 
-        for(int i = 0; i < indexes.length; i++)
-        {
+        for (int index : indexes) {
             //add the songs from the playlist to the combined playlist
-            songs.addAll(MainActivity.list_of_playLists.get(indexes[i]).songList);
+            songs.addAll(MainActivity.list_of_playLists.get(index).songList);
         }
 
         return songs;
@@ -363,19 +352,14 @@ public class PlayListView extends AppCompatActivity {
         //listAdapter.notifyDataSetChanged();
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     public void shuffle_btn_click(View view)
     {
         MusicPlayer.getInstance().shuffle();
 
+        //whole dataset is shuffled randomly. no way of knowing exact changes
         listAdapter.notifyDataSetChanged();
         notifyStateChange();
-
-//        if (MusicPlayer.getInstance().getPreviousState() == State.IDLE) {
-//            notifyStateChange();
-//        }
-//        else{
-//            listAdapter.notifyDataSetChanged();
-//        }
 
     }
 
@@ -392,8 +376,6 @@ public class PlayListView extends AppCompatActivity {
         edit_launcher.launch(intent);
 
         ArrayList<PlayList> list_of_playLists = MainActivity.list_of_playLists;
-        System.out.println("Name back from activity: " + list_of_playLists.get(playList_ix).playListName);
-
     }
 
     public void skip_right_click(View view)
@@ -436,14 +418,14 @@ public class PlayListView extends AppCompatActivity {
     {
 
 
-        audioManager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+        AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
         AudioAttributes playbackAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build();
 
 
-        audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+        AudioFocusRequest audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                 .setAudioAttributes(playbackAttributes)
                 .setAcceptsDelayedFocusGain(true)
                 .setOnAudioFocusChangeListener(focusChangeListener)
@@ -460,7 +442,6 @@ public class PlayListView extends AppCompatActivity {
                 int state = intent.getIntExtra("state", -1);
                 switch (state) {
                     case 0:
-                        System.out.println("DEBUG: ON RECEIVE");
                         MusicPlayer.getInstance().pause();
                         break;
                 }

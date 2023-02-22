@@ -40,14 +40,11 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
         holder.songName.setText(songs.get(holder.getAdapterPosition()).name);
 
-        holder.mainLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                System.out.println("DEBUG: CLICK AT POSITION " + holder.getAdapterPosition());
-                MusicPlayer.getInstance().playSong(holder.getAdapterPosition());
-                //PlayListView.notifyStateChange();
-                PlayListView.changeState = true;
-            }
+        holder.mainLayout.setOnClickListener(view -> {
+            System.out.println("DEBUG: CLICK AT POSITION " + holder.getAdapterPosition());
+            MusicPlayer.getInstance().playSong(holder.getAdapterPosition());
+            //PlayListView.notifyStateChange();
+            PlayListView.changeState = true;
         });
 
 

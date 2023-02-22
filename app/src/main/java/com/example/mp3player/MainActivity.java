@@ -119,10 +119,15 @@ public class MainActivity extends AppCompatActivity
             new ActivityResultCallback<ActivityResult>() {
                 @Override
                 public void onActivityResult(ActivityResult result) {
+
+                    for(int i = 0; i < list_of_playLists.size(); i++)
+                    {
+                        list_of_playLists.get(i).checked = false;
+                    }
+
                     if(result.getResultCode() == Activity.RESULT_OK)
                     {
                         //NEED TO THINK OF OTHER THINGS TO DO HERE (IF ANY)
-
 
                         //write any changes in the playlists to the JSON
                         handler.writeToJSON(list_of_playLists);
@@ -202,6 +207,7 @@ public class MainActivity extends AppCompatActivity
 
             if(indexes.length() > 0)
             {
+                Log.d("Main", "Starting PlayListView");
                 Intent intent = new Intent(this, PlayListView.class);
                 intent.putExtra("Indexes", indexes);
 
@@ -408,24 +414,16 @@ public class MainActivity extends AppCompatActivity
             //click listener for the 3 vertical dots on the menu option
             //note: this will not trigger the row's click listener
             ImageButton playlist_settings = row.findViewById(R.id.playList_settings_btn);
-            playlist_settings.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    showPopupMenu(view, position);
-                }
-            });
+            playlist_settings.setOnClickListener(view -> showPopupMenu(view, position));
 
             //click listener for the remainder of the playlist button
-            row.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    //get the View for the checkbox
-                    CheckBox checkBox = (CheckBox) view.findViewById(R.id.playList_checkbox);
+            row.setOnClickListener(view -> {
+                //get the View for the checkbox
+                CheckBox checkBox = (CheckBox) view.findViewById(R.id.playList_checkbox);
 
-                    //if the checkbox is checked then uncheck it otherwise check it
-                    checkBox.setChecked(!checkBox.isChecked());
+                //if the checkbox is checked then uncheck it otherwise check it
+                checkBox.setChecked(!checkBox.isChecked());
 
-                }
             });
 
             //check the checkbox if this item was checked by something earlier
@@ -441,17 +439,21 @@ public class MainActivity extends AppCompatActivity
             holder.playListCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    if(b)
+                    if(b) {
                         checked.add(finalHolder.playListName.getText().toString());
-                    else
+                        list_of_playLists.get(position).checked = true;
+                    }
+                    else {
                         checked.remove(finalHolder.playListName.getText().toString());
+                        list_of_playLists.get(position).checked = false;
+                    }
                 }
             });
 
             return row;
         }
 
-        //displays the popup menu (used when clicking the 3 certical dots)
+        //displays the popup menu (used when clicking the 3 vertical dots)
         private void showPopupMenu(View view, int pos)
         {
             PopupMenu popupMenu = new PopupMenu(view.getContext(), view);
@@ -474,6 +476,7 @@ public class MainActivity extends AppCompatActivity
         */
         public boolean onMenuItemClick(MenuItem item, int pos)
         {
+            //TODO: delete playlist functionality goes here
             if(item.getItemId() == R.id.playlist_popup_edit)
             {
                 //TODO: Start the edit playlist activity
@@ -487,12 +490,7 @@ public class MainActivity extends AppCompatActivity
 
                 return true;
             }
-            else if(item.getItemId() == R.id.playlist_popup_delete)
-            {
-                //TODO: delete playlist functionality goes here
-                return true;
-            }
-            return false;
+            else return item.getItemId() == R.id.playlist_popup_delete;
         }
 
         //clears all the checks
@@ -534,7 +532,7 @@ class PlaylistComparator implements Comparator<PlayList>
 {
     //TODO: Let the user have more complex ways to sort via settings?
 
-    private static PlaylistComparator comparator = new PlaylistComparator();
+    private static final PlaylistComparator comparator = new PlaylistComparator();
     private PlaylistComparator()
     {
         //might add some things here
