@@ -10,7 +10,6 @@ import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.telephony.TelephonyCallback;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -107,6 +106,7 @@ public class PlayListView extends AppCompatActivity {
         Intent intent = getIntent();
 
         playList_ix = intent.getIntExtra("PlayListIndex", -1);
+        boolean shuffle = intent.getBooleanExtra("Shuffle", false);
         playList = getPlayList();
 
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -116,11 +116,14 @@ public class PlayListView extends AppCompatActivity {
 
         initComponents();
 
-        //load the selected playlist into the MusicPlayer
+        //load the selected playlist into the MusicPlayer and shuffle if need to
         MusicPlayer.getInstance().loadPlayList(playList);
         MusicPlayer.getInstance().setOnCompletionListener(mediaPlayer -> notifyStateChange());
 
-
+        if(shuffle)
+        {
+            MusicPlayer.getInstance().shuffleNoPlay();
+        }
 
         //creates and attaches the adapter that the recyclerView
         createAdapter();
@@ -139,14 +142,14 @@ public class PlayListView extends AppCompatActivity {
             }
         };
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            TelephonyCallback.CallStateListener listener = new TelephonyCallback.CallStateListener() {
-                @Override
-                public void onCallStateChanged(int i) {
-
-                }
-            };
-        }
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+//            TelephonyCallback.CallStateListener listener = new TelephonyCallback.CallStateListener() {
+//                @Override
+//                public void onCallStateChanged(int i) {
+//
+//                }
+//            };
+//        }
 
         MusicIntentReceiver receiver = new MusicIntentReceiver();
         edit_launcher = registerForActivityResult(
@@ -294,7 +297,7 @@ public class PlayListView extends AppCompatActivity {
         }
 
         //combined playlist
-        ArrayList<Song> songs = new ArrayList<Song>();
+        ArrayList<Song> songs = new ArrayList<>();
 
         for (int index : indexes) {
             //add the songs from the playlist to the combined playlist
@@ -434,7 +437,7 @@ public class PlayListView extends AppCompatActivity {
         return audioManager.requestAudioFocus(audioFocusRequest);
     }
 
-    private class MusicIntentReceiver extends BroadcastReceiver {
+    private static class MusicIntentReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {

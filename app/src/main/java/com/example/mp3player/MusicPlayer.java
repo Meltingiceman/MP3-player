@@ -1,9 +1,7 @@
 package com.example.mp3player;
 
 import android.media.AudioAttributes;
-import android.media.AudioFocusRequest;
 import android.media.MediaPlayer;
-import android.media.AudioManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -224,7 +222,7 @@ public class MusicPlayer {
             }
 
             song_ix = 0;
-            //DON'T playSong() here or it will restart the current playing song
+            //DON'T playSong() here or it will restart the currently playing song
         }
         /* If the musicPlayer is not playing then just shuffle the list and play the first song */
         else if(state == State.PAUSED || state == State.IDLE)
@@ -234,6 +232,12 @@ public class MusicPlayer {
             song_ix = -1;
             playSong(0);
         }
+    }
+
+    //simpler shuffle method that is meant to be called prior to any music being played
+    public void shuffleNoPlay()
+    {
+        Collections.shuffle(playList);
     }
 
     public void reset()

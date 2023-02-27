@@ -24,8 +24,6 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -33,14 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -58,8 +49,6 @@ public class MainActivity extends AppCompatActivity
     public ActivityResultLauncher<Intent> addEditLauncher;
     private ActivityResultLauncher<Intent> playListClick_launcher;
 
-    public static final String DATA_FILE_NAME = "data.json";
-    public static final String DATA_FOLDER_NAME = "appData";
     public static final String MUSIC_FOLDER_NAME = "music";
 
     @Override
@@ -68,7 +57,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         handler = new FileHandler(getFilesDir().toString());
-        boolean success = handler.init();
+        handler.init();
 
 
         //load the playlist
@@ -92,34 +81,30 @@ public class MainActivity extends AppCompatActivity
         //Result action of adding a new playlist
         addEditLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
+                result -> {
                     if(result.getResultCode() == Activity.RESULT_OK)
                     {
                         Intent data = result.getData();
                         //Toast.makeText(getApplicationContext(), data.getStringExtra(playListName_key), Toast.LENGTH_LONG).show();
 
-                        PlayList pList = new PlayList();
-                        pList.playListName = data.getStringExtra(playListName_key);
-                        list_of_playLists.add(pList);
+                        if (data != null) {
+                            PlayList pList = new PlayList();
+                            pList.playListName = data.getStringExtra(playListName_key);
+                            list_of_playLists.add(pList);
 
-                        handler.writeToJSON(list_of_playLists);
-
+                            handler.writeToJSON(list_of_playLists);
+                        }
                         displayList();
                     }
                 }
-            }
         );
 
         //Result action for clicking a playList.
-        //TODO: need to re do (or completely delete) this so it works with the new UI
         playListClick_launcher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
+                result -> {
 
+                    //upon activity return set all songs to unchecked
                     for(int i = 0; i < list_of_playLists.size(); i++)
                     {
                         list_of_playLists.get(i).checked = false;
@@ -134,7 +119,6 @@ public class MainActivity extends AppCompatActivity
                         displayList();
                     }
                 }
-            }
         );
     }
 
@@ -178,18 +162,41 @@ public class MainActivity extends AppCompatActivity
         View selectAllBtn = findViewById(R.id.select_all_btn);
         selectAllBtn.setOnClickListener((View v) -> {
 
+            //if there are some checked items uncheck them otherwise check them all
+            if(arrayAdapter.someChecked())
+                arrayAdapter.clearChecked();
+            else
+                arrayAdapter.checkAll();
+
+            arrayAdapter.notifyDataSetChanged();
         });
 
         //trash button
         View trashBtn = findViewById(R.id.main_trash_btn);
-        trashBtn.setOnClickListener((View v) -> {
-
-        });
+        trashBtn.setOnClickListener((View v) -> arrayAdapter.deleteChecked());
 
         //shuffle button
         View shuffleBtn = findViewById(R.id.main_shuffle_btn);
         shuffleBtn.setOnClickListener((View v) -> {
 
+            String indexes = "";
+            for(int i = 0; i < list_of_playLists.size(); i++)
+            {
+                if(list_of_playLists.get(i).checked)
+                {
+                    indexes += (i + ",");
+                }
+            }
+
+            if(indexes.length() > 0)
+            {
+                Log.d("Main", "Starting PlayListView");
+                Intent intent = new Intent(this, PlayListView.class);
+                intent.putExtra("Indexes", indexes);
+                intent.putExtra("Shuffle", true);
+
+                playListClick_launcher.launch(intent);
+            }
         });
 
         //play button
@@ -235,7 +242,7 @@ public class MainActivity extends AppCompatActivity
     public void onDialogPositiveClick(DialogFragment dialog)
     {
         Dialog d = dialog.getDialog();
-        EditText editText = (EditText)d.findViewById(R.id.PL_Name);
+        EditText editText = d.findViewById(R.id.PL_Name);
 
         String name = editText.getText().toString();
 
@@ -256,7 +263,8 @@ public class MainActivity extends AppCompatActivity
     public void onDialogNegativeClick(DialogFragment dialog)
     {
         Dialog d = dialog.getDialog();
-        d.cancel();
+        if(d != null)
+            d.cancel();
     }
 
     //takes the contents of the list_of_playLists arraylist and displays it
@@ -366,8 +374,8 @@ public class MainActivity extends AppCompatActivity
     {
         Context context;
         int layoutResourceId;
-        ArrayList<PlayList> data = null;
-        private ArrayList<String> checked;
+        ArrayList<PlayList> data;
+        private final ArrayList<String> checked;
 
         public PlayListAdapter(Context context, int resource, List<PlayList> list)
         {
@@ -383,19 +391,19 @@ public class MainActivity extends AppCompatActivity
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            PlayListHolder holder = null;
+            PlayListHolder holder;
             View row = convertView;
 
             //if the row has not been made yet then inflate
             if(row == null)
             {
-                    LayoutInflater inflater = ((Activity)context).getLayoutInflater();
-                    row = inflater.inflate(layoutResourceId, parent, false);
+                LayoutInflater inflater = ((Activity)context).getLayoutInflater();
+                row = inflater.inflate(layoutResourceId, parent, false);
 
-                    holder = new PlayListHolder();
-                    holder.playListName = row.findViewById(R.id.edit_playlist_title);
-                    holder.itemAmount = row.findViewById(R.id.edit_playlist_subtitle);
-                    holder.playListCheck = row.findViewById(R.id.playList_checkbox);
+                holder = new PlayListHolder();
+                holder.playListName = row.findViewById(R.id.edit_playlist_title);
+                holder.itemAmount = row.findViewById(R.id.edit_playlist_subtitle);
+                holder.playListCheck = row.findViewById(R.id.playList_checkbox);
 
                 row.setTag(holder);
             }
@@ -419,7 +427,7 @@ public class MainActivity extends AppCompatActivity
             //click listener for the remainder of the playlist button
             row.setOnClickListener(view -> {
                 //get the View for the checkbox
-                CheckBox checkBox = (CheckBox) view.findViewById(R.id.playList_checkbox);
+                CheckBox checkBox = view.findViewById(R.id.playList_checkbox);
 
                 //if the checkbox is checked then uncheck it otherwise check it
                 checkBox.setChecked(!checkBox.isChecked());
@@ -436,17 +444,14 @@ public class MainActivity extends AppCompatActivity
 
             //code that gets executed each time something is checked. (except if done on line above)
             PlayListHolder finalHolder = holder;
-            holder.playListCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    if(b) {
-                        checked.add(finalHolder.playListName.getText().toString());
-                        list_of_playLists.get(position).checked = true;
-                    }
-                    else {
-                        checked.remove(finalHolder.playListName.getText().toString());
-                        list_of_playLists.get(position).checked = false;
-                    }
+            holder.playListCheck.setOnCheckedChangeListener((compoundButton, b) -> {
+                if(b) {
+                    checked.add(finalHolder.playListName.getText().toString());
+                    list_of_playLists.get(position).checked = true;
+                }
+                else {
+                    checked.remove(finalHolder.playListName.getText().toString());
+                    list_of_playLists.get(position).checked = false;
                 }
             });
 
@@ -459,12 +464,7 @@ public class MainActivity extends AppCompatActivity
             PopupMenu popupMenu = new PopupMenu(view.getContext(), view);
             popupMenu.inflate(R.menu.playlist_button_menu);
 
-            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem menuItem) {
-                    return PlayListAdapter.this.onMenuItemClick(menuItem, pos);
-                }
-            });
+            popupMenu.setOnMenuItemClickListener(menuItem -> PlayListAdapter.this.onMenuItemClick(menuItem, pos));
 
             popupMenu.show();
         }
@@ -476,10 +476,8 @@ public class MainActivity extends AppCompatActivity
         */
         public boolean onMenuItemClick(MenuItem item, int pos)
         {
-            //TODO: delete playlist functionality goes here
             if(item.getItemId() == R.id.playlist_popup_edit)
             {
-                //TODO: Start the edit playlist activity
                 Intent intent = new Intent(context, Edit_Playlist.class);
                 intent.putExtra("playlist_name", data.get(pos).playListName);
                 intent.putExtra("editing", true);
@@ -490,17 +488,47 @@ public class MainActivity extends AppCompatActivity
 
                 return true;
             }
-            else return item.getItemId() == R.id.playlist_popup_delete;
+            else if (item.getItemId() == R.id.playlist_popup_delete)
+            {
+                data.remove(pos);
+                notifyDataSetChanged();
+
+                //might be unnecessary but put here just in case
+                list_of_playLists = data;
+                handler.writeToJSON(list_of_playLists);
+                return true;
+            }
+
+            return false;
         }
 
         //clears all the checks
         public void clearChecked()
         {
             checked.clear();
-            //TODO: this needs to do more than just clear the list of checked stuff
         }
 
-        //TODO: make a way to get the indexes of the checked items
+        //makes all songs checked
+        public void checkAll()
+        {
+            for(PlayList p: data)
+            {
+                checked.add(p.playListName);
+            }
+        }
+
+        public void deleteChecked()
+        {
+            //remove playlist from data if it is checked
+            data.removeIf(playlist -> playlist.checked);
+            clearChecked();
+        }
+
+        //determines if some of the items in the list are checked
+        public boolean someChecked()
+        {
+            return checked.size() > 0;
+        }
 
         private class PlayListHolder
         {
@@ -519,9 +547,10 @@ class PlayList
 
     public PlayList()
     {
-        songList = new ArrayList<Song>();
+        songList = new ArrayList<>();
     }
 
+    @NonNull
     public String toString()
     {
         return playListName;

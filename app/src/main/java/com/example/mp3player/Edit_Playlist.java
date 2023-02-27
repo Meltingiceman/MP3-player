@@ -78,8 +78,6 @@ public class Edit_Playlist extends AppCompatActivity {
             fillDisplay(deepCopy);
         }
 
-        //TODO: Support adding a playlist
-
         edit_launcher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -202,8 +200,7 @@ public class Edit_Playlist extends AppCompatActivity {
         //confirm button listener
         confirmBtn.setOnClickListener(view -> {
             //save the updated playlist
-            String newPlaylistName = ((EditText)findViewById(R.id.edit_playlist_playListName)).getText().toString();
-            deepCopy.playListName = newPlaylistName;
+            deepCopy.playListName = ((EditText)findViewById(R.id.edit_playlist_playListName)).getText().toString();
 
             MainActivity.list_of_playLists.set(playList_ix, deepCopy);
             MainActivity.handler.writeToJSON(MainActivity.list_of_playLists);

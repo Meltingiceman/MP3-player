@@ -84,7 +84,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         myViewHolder.mainLayout.setBackgroundColor(Color.WHITE);
     }
 
-    public class SongViewHolder extends RecyclerView.ViewHolder{
+    public static class SongViewHolder extends RecyclerView.ViewHolder{
 
         TextView songName;
         RelativeLayout mainLayout;
